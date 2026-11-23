@@ -18,15 +18,33 @@ export default function Home() {
   // Category Filter
   const [selectedCategory, setSelectedCategory] = useState<"all" | "mvp" | "business">("all");
 
-  // Business Card Flip
+  // Animated Card / GIF Flip
   const [isCardFlipped, setIsCardFlipped] = useState(false);
-  const [cardImgError, setCardImgError] = useState(false);
+  const [gifError, setGifError] = useState(false);
+
+  // 15-Second Interactive App Demo Player
+  const [activeDemoApp, setActiveDemoApp] = useState<"coffee" | "barber">("coffee");
+  const [demoStep, setDemoStep] = useState<number>(0);
+  const [isDemoPlaying, setIsDemoPlaying] = useState<boolean>(true);
+
+  // 3-Question Business Quiz (No prices!)
+  const [quizStep, setQuizStep] = useState<number>(0);
+  const [quizAnswers, setQuizAnswers] = useState<{
+    goal: string;
+    clients: string;
+    management: string;
+  }>({
+    goal: "",
+    clients: "",
+    management: "",
+  });
 
   // Lead Form State
   const [leadName, setLeadName] = useState("");
   const [leadPhone, setLeadPhone] = useState("");
   const [leadBusiness, setLeadBusiness] = useState("");
 
+  // Splash Screen Timer
   useEffect(() => {
     const fadeTimer = setTimeout(() => setFadeSplash(true), 1700);
     const hideTimer = setTimeout(() => setShowSplash(false), 2200);
@@ -35,6 +53,15 @@ export default function Home() {
       clearTimeout(hideTimer);
     };
   }, []);
+
+  // 15-Second Demo Loop (4 steps x 3.75s = 15s)
+  useEffect(() => {
+    if (!isDemoPlaying) return;
+    const interval = setInterval(() => {
+      setDemoStep((prev) => (prev + 1) % 4);
+    }, 3750);
+    return () => clearInterval(interval);
+  }, [isDemoPlaying, activeDemoApp]);
 
   const handleLeadSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +73,33 @@ export default function Home() {
     window.open(`https://wa.me/972527431770?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
-  // מיפוי צבעים דינמי לפי הבחירה ב-Theme Accent Picker
+  // המלצת החידון לפי התשובות (ללא מחיר!)
+  const getQuizRecommendation = () => {
+    if (quizAnswers.goal === "תורים ויומן לקוחות") {
+      return {
+        title: "מערכת קביעת תורים חכמה + יומן אוטומטי",
+        desc: "מערכת שמאפשרת ללקוחות שלך לקבוע תור לבד ב-3 קליקים, שולחת תזכורות ומונעת ביטולים של הרגע האחרון.",
+      };
+    }
+    if (quizAnswers.goal === "מכירות והזמנות אונליין") {
+      return {
+        title: "אפליקציית הזמנות ותפריט דיגיטלי מהיר",
+        desc: "חנות/תפריט מותאם מובייל עם בחירת תוספות אישית, הזמנה מהירה וניהול מלאי בזמן אמת.",
+      };
+    }
+    return {
+      title: "אפליקציית MVP מותאמת אישית (השקה מהירה)",
+      desc: "גרסה ראשונית חכמה ומדויקת לרעיון שלך, שנועדה להביא משתמשים ראשונים ולהוכיח היתכנות בשוק.",
+    };
+  };
+
+  const handleSendQuizToWhatsApp = () => {
+    const rec = getQuizRecommendation();
+    const msg = `היי גילעד! מילאתי את השאלון באתר:\n• מטרה עיקרית: ${quizAnswers.goal}\n• אופי הלקוחות: ${quizAnswers.clients}\n• ניהול נדרש: ${quizAnswers.management}\n• ההמלצה שקיבלתי: ${rec.title}\nאשמח שנבדוק יחד איך מתחילים!`;
+    window.open(`https://wa.me/972527431770?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  // מיפוי צבעים דינמי
   const accentStyles: Record<
     AccentColor,
     {
@@ -56,6 +109,7 @@ export default function Home() {
       border: string;
       heroBg: string;
       spinBorder: string;
+      barBg: string;
     }
   > = {
     amber: {
@@ -67,6 +121,7 @@ export default function Home() {
         ? "bg-gradient-to-l from-amber-500/15 via-[#16181f] to-[#16181f] border-amber-500/30"
         : "bg-gradient-to-l from-amber-100 via-white to-white border-amber-300",
       spinBorder: "border-amber-500/20 border-t-amber-400 border-r-amber-400",
+      barBg: "bg-amber-400",
     },
     cyan: {
       btn: "bg-cyan-400 hover:bg-cyan-300 text-slate-950 shadow-cyan-500/20",
@@ -77,6 +132,7 @@ export default function Home() {
         ? "bg-gradient-to-l from-cyan-500/15 via-[#16181f] to-[#16181f] border-cyan-500/30"
         : "bg-gradient-to-l from-cyan-100 via-white to-white border-cyan-300",
       spinBorder: "border-cyan-500/20 border-t-cyan-400 border-r-cyan-400",
+      barBg: "bg-cyan-400",
     },
     purple: {
       btn: "bg-purple-500 hover:bg-purple-400 text-white shadow-purple-500/20",
@@ -87,6 +143,7 @@ export default function Home() {
         ? "bg-gradient-to-l from-purple-500/15 via-[#16181f] to-[#16181f] border-purple-500/30"
         : "bg-gradient-to-l from-purple-100 via-white to-white border-purple-300",
       spinBorder: "border-purple-500/20 border-t-purple-400 border-r-purple-400",
+      barBg: "bg-purple-500",
     },
     emerald: {
       btn: "bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-emerald-500/20",
@@ -97,6 +154,7 @@ export default function Home() {
         ? "bg-gradient-to-l from-emerald-500/15 via-[#16181f] to-[#16181f] border-emerald-500/30"
         : "bg-gradient-to-l from-emerald-100 via-white to-white border-emerald-300",
       spinBorder: "border-emerald-500/20 border-t-emerald-400 border-r-emerald-400",
+      barBg: "bg-emerald-400",
     },
   };
 
@@ -105,6 +163,72 @@ export default function Home() {
   const bgCard = isDark ? "bg-[#16181f] border-white/10" : "bg-white border-slate-200 shadow-sm";
   const bgSubCard = isDark ? "bg-[#222530] border-white/10" : "bg-slate-100 border-slate-200";
   const textMuted = isDark ? "text-slate-400" : "text-slate-600";
+
+  // שלבי סרטון ההדגמה (15 שניות)
+  const coffeeDemoSteps = [
+    {
+      step: "שלב 1 מתוך 4 (00:03)",
+      title: "הלקוח פותח את התפריט מהנייד",
+      screenTitle: "☕ עגלת הקפה — תפריט חי",
+      screenBody: "בוחר: הפוך גדול • חלב שיבולת • רותח",
+      badge: "ללא המתנה בתור",
+    },
+    {
+      step: "שלב 2 מתוך 4 (00:07)",
+      title: "בחירת שעת איסוף מדויקת",
+      screenTitle: "⚡ הזמן שוב את הקבוע שלך",
+      screenBody: "שעת איסוף נבחרה: 08:45 (עוד 10 דק')",
+      badge: "חוסך שיחות טלפון",
+    },
+    {
+      step: "שלב 3 מתוך 4 (00:11)",
+      title: "אישור הזמנה בקליק אחד",
+      screenTitle: "✅ ההזמנה נשלחה לעמדה!",
+      screenBody: "מספר הזמנה #42 • מתכונן עכשיו",
+      badge: "התראה מיידית לעסק",
+    },
+    {
+      step: "שלב 4 מתוך 4 (00:15)",
+      title: "הלקוח אוסף והעסק מרוויח יותר",
+      screenTitle: "🎉 מוכן לאיסוף!",
+      screenBody: "חוויית שירות מהירה שמחזירה לקוחות שוב ושוב",
+      badge: "100% אוטומטי",
+    },
+  ];
+
+  const barberDemoSteps = [
+    {
+      step: "שלב 1 מתוך 4 (00:03)",
+      title: "הלקוח בוחר סוג טיפול",
+      screenTitle: "✂️ המספרה — שלב 1 מתוך 3",
+      screenBody: "נבחר: תספורת רגילה (35 דקות)",
+      badge: "פשוט וברור",
+    },
+    {
+      step: "שלב 2 מתוך 4 (00:07)",
+      title: "בחירת יום ושעה פנויה ביומן",
+      screenTitle: "📅 בחר שעה פנויה",
+      screenBody: "יום שלישי • שעה 16:30 זמינה",
+      badge: "מסונכרן בזמן אמת",
+    },
+    {
+      step: "שלב 3 מתוך 4 (00:11)",
+      title: "התור נרשם אוטומטית אצלך",
+      screenTitle: "✅ התור אושר בהצלחה!",
+      screenBody: "נכנס ליומן הניהול + תזכורת ללקוח",
+      badge: "אפס התעסקות בוואטסאפ",
+    },
+    {
+      step: "שלב 4 מתוך 4 (00:15)",
+      title: "היומן מלא בלי שתענה לטלפונים",
+      screenTitle: "📊 יומן מסודר 24/7",
+      screenBody: "לקוחות קובעים תור גם ב-23:00 בלילה",
+      badge: "עובד בשבילך 24/7",
+    },
+  ];
+
+  const currentDemo =
+    activeDemoApp === "coffee" ? coffeeDemoSteps[demoStep] : barberDemoSteps[demoStep];
 
   return (
     <div
@@ -155,7 +279,7 @@ export default function Home() {
           : "⚡ Smart App & Web Development for Startups • End-to-End Personal Guidance"}
       </div>
 
-      {/* ================= HEADER (APP STYLE) ================= */}
+      {/* ================= HEADER ================= */}
       <header
         className={`sticky top-0 z-40 backdrop-blur-md border-b transition-colors ${
           isDark ? "bg-[#0b0c10]/90 border-white/10" : "bg-white/90 border-slate-200"
@@ -182,7 +306,6 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* כפתור מצב בהיר / כהה */}
             <button
               onClick={() => setIsDark(!isDark)}
               className={`px-3 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${bgCard}`}
@@ -205,95 +328,142 @@ export default function Home() {
       </header>
 
       {/* ================= MAIN CONTAINER ================= */}
-      <main id="top" className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* כרטיס כותרת מרכזי */}
-        <section className={`rounded-2xl border p-5 shadow-sm ${theme.heroBg}`}>
-          <span className={`text-xs font-bold block mb-1 ${theme.text}`}>
+      <main id="top" className="max-w-2xl mx-auto px-4 py-6 space-y-7">
+        {/* ================= 1. כותרת ראשית מוכוונת תוצאה ================= */}
+        <section className={`rounded-2xl border p-6 shadow-sm space-y-4 ${theme.heroBg}`}>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span>
+              {lang === "he"
+                ? "פנויים לקבלת פרויקטים חדשים"
+                : "Available for New Projects"}
+            </span>
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl font-black leading-tight">
             {lang === "he"
-              ? "⚡ הפוך את הרעיון שלך לאפליקציה עובדת"
-              : "⚡ Turn your idea into a working app"}
-          </span>
-          <h1 className="text-xl sm:text-2xl font-black leading-snug">
-            {lang === "he"
-              ? "אפליקציות ואתרים ברמה גבוהה לעסקים בתחילת הדרך"
-              : "High-End Apps & Websites for Early-Stage Businesses"}
+              ? "הפוך את העסק שלך למכונה שעובדת 24/7 — אפליקציה מותאמת אישית שמביאה לקוחות וחוסכת שעות עבודה"
+              : "Turn Your Business into a 24/7 Engine — Custom Apps That Bring Clients & Save Hours"}
           </h1>
+
+          <p className={`text-xs sm:text-sm leading-relaxed ${textMuted}`}>
+            {lang === "he"
+              ? "בלי לרדוף אחרי הודעות בוואטסאפ ובלי לשרוף תקציבי ענק. אני בונה עבורך אפליקציה חכמה, מהירה ומעוצבת שעובדת בשבילך מסביב לשעון."
+              : "Stop chasing messages manually. I build fast, modern custom apps that work for your business around the clock."}
+          </p>
+
+          <div className="flex flex-wrap gap-3 pt-1">
+            <a
+              href="https://wa.me/972527431770"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`font-extrabold text-xs sm:text-sm px-5 py-3 rounded-xl transition shadow-lg ${theme.btn}`}
+            >
+              {lang === "he" ? "בוא נבנה את האפליקציה שלך 🚀" : "Build Your App Now 🚀"}
+            </a>
+            <a
+              href="#demo"
+              className={`font-bold text-xs sm:text-sm px-5 py-3 rounded-xl border transition ${bgCard}`}
+            >
+              {lang === "he" ? "צפה בהדגמה חיה ▶️" : "Watch Live Demo ▶️"}
+            </a>
+          </div>
         </section>
 
-        {/* ================= קובץ הכלים החכמים (SiteTools) ================= */}
-        <SiteTools
-          accent={accent}
-          setAccent={setAccent}
-          lang={lang}
-          setLang={setLang}
-          isDark={isDark}
-        />
-
-        {/* ================= כרטיס ביקור אינטראקטיבי מתהפך ================= */}
+        {/* ================= 2. אנימציית גרפיקה חיה / GIF בראש העמוד (במקום התמונה) ================= */}
         <section className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold">
-              {lang === "he" ? "כרטיס הביקור הדיגיטלי" : "Digital Business Card"}
+            <h3 className="text-base font-bold flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              <span>
+                {lang === "he" ? "כרטיס ביקור חי ואינטראקטיבי" : "Live Animated Business Card"}
+              </span>
             </h3>
             <button
               onClick={() => setIsCardFlipped(!isCardFlipped)}
               className={`text-xs font-bold hover:underline cursor-pointer ${theme.text}`}
             >
-              {lang === "he" ? "🔄 לחץ להיפוך הכרטיס" : "🔄 Flip Card"}
+              {lang === "he" ? "🔄 הפוך כרטיס" : "🔄 Flip Card"}
             </button>
           </div>
 
           <div
             onClick={() => setIsCardFlipped(!isCardFlipped)}
-            className="cursor-pointer select-none group"
+            className="cursor-pointer select-none"
           >
             {!isCardFlipped ? (
-              <div className={`relative rounded-2xl overflow-hidden border shadow-xl aspect-[3/2] bg-gradient-to-br from-[#0a1128] via-[#121d42] to-[#080d21] ${theme.border}`}>
-                {!cardImgError ? (
+              <div
+                className={`relative rounded-2xl overflow-hidden border shadow-2xl aspect-[3/2] bg-[#060b19] ${theme.border}`}
+              >
+                {/* אם תשמור את ה-GIF בשם public/business-card.gif הוא יוצג אוטומטית; אחרת תוצג אנימציית הייטק חיה */}
+                {!gifError ? (
                   <img
-                    src="/gilad.app/business-card.jpg"
-                    alt="כרטיס ביקור גילעד קרליבך"
-                    onError={() => setCardImgError(true)}
+                    src="/gilad.app/business-card.gif"
+                    alt="כרטיס ביקור מונפש גילעד קרליבך"
+                    onError={() => setGifError(true)}
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full p-6 flex flex-col justify-between text-white relative">
-                    <div className="flex justify-between items-start">
-                      <span
-                        className="px-3 py-1 rounded-lg bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 text-xs font-mono"
-                        dir="ltr"
-                      >
-                        &lt;/&gt; APP DEV
-                      </span>
-                      <span className="text-xs text-slate-400">
-                        {lang === "he" ? "לחץ להיפוך ↻" : "Tap to flip ↻"}
-                      </span>
+                  <div className="w-full h-full relative overflow-hidden p-6 flex flex-col justify-between text-white">
+                    {/* רקע אנימציית רשת וזוהר חי */}
+                    <div className="absolute -top-16 -left-16 w-56 h-56 rounded-full bg-cyan-500/25 blur-3xl animate-pulse" />
+                    <div className="absolute -bottom-16 -right-16 w-56 h-56 rounded-full bg-purple-600/25 blur-3xl animate-pulse" />
+                    <div
+                      className="absolute inset-0 opacity-20"
+                      style={{
+                        backgroundImage:
+                          "radial-gradient(circle at 2px 2px, rgba(56,189,248,0.6) 1px, transparent 0)",
+                        backgroundSize: "24px 24px",
+                      }}
+                    />
+
+                    {/* שורה עליונה מונפשת */}
+                    <div className="relative z-10 flex items-center justify-between">
+                      <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-white/10 border border-cyan-400/30 backdrop-blur-md">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                        <span className="text-xs font-mono text-cyan-300" dir="ltr">
+                          &lt;GiladApps LIVE /&gt;
+                        </span>
+                      </div>
+                      <div className="w-10 h-10 rounded-xl border border-purple-400/40 flex items-center justify-center animate-spin-slow">
+                        <span className="text-cyan-300 text-xs font-bold">⚡</span>
+                      </div>
                     </div>
-                    <div className={lang === "he" ? "text-right" : "text-left"}>
-                      <h4 className="text-2xl sm:text-3xl font-black text-white">
+
+                    {/* מרכז הכרטיס */}
+                    <div className={`relative z-10 ${lang === "he" ? "text-right" : "text-left"}`}>
+                      <h4 className="text-2xl sm:text-4xl font-black tracking-tight text-white drop-shadow">
                         {lang === "he" ? "גילעד קרליבך" : "Gilad Karlibach"}
                       </h4>
-                      <p className="text-cyan-400 font-medium text-sm sm:text-base">
+                      <p className="text-transparent bg-clip-text bg-gradient-to-l from-cyan-300 to-purple-300 font-bold text-sm sm:text-lg mt-1">
                         {lang === "he"
                           ? "פיתוח אפליקציות לעסקים מתחילים"
                           : "App Development for Startups"}
                       </p>
                     </div>
-                    <div className="text-left text-xs sm:text-sm text-slate-300 space-y-0.5" dir="ltr">
-                      <p>✉️ gilad.creating.apps@gmail.com</p>
-                      <p>📞 0527431770</p>
+
+                    {/* פרטי קשר תחתונים */}
+                    <div
+                      className="relative z-10 flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-white/10 text-xs sm:text-sm text-cyan-200 font-mono"
+                      dir="ltr"
+                    >
+                      <span>✉️ gilad.creating.apps@gmail.com</span>
+                      <span>📞 0527431770</span>
                     </div>
                   </div>
                 )}
-                <div className="absolute bottom-2.5 left-2.5 bg-black/70 backdrop-blur-sm text-white text-[11px] px-2.5 py-1 rounded-lg border border-white/15">
-                  {lang === "he" ? "לחץ לצד האחורי ↻" : "Tap for back side ↻"}
+
+                <div className="absolute bottom-2.5 right-2.5 bg-black/70 backdrop-blur-sm text-white text-[11px] px-2.5 py-1 rounded-lg border border-white/15">
+                  {lang === "he" ? "לחץ לצד האחורי ↻" : "Tap to flip ↻"}
                 </div>
               </div>
             ) : (
-              <div className={`rounded-2xl border shadow-xl aspect-[3/2] bg-gradient-to-br from-[#16181f] to-[#0b0c10] text-white p-6 flex flex-col justify-between ${theme.border}`}>
+              <div
+                className={`rounded-2xl border shadow-xl aspect-[3/2] bg-gradient-to-br from-[#16181f] to-[#0b0c10] text-white p-6 flex flex-col justify-between ${theme.border}`}
+              >
                 <div className="flex items-center justify-between">
                   <span className={`text-xs font-bold ${theme.text}`}>
-                    {lang === "he" ? "למה לבחור בי לעסק שלך?" : "Why work with me?"}
+                    {lang === "he" ? "היתרונות שלך איתי:" : "Your Advantages:"}
                   </span>
                   <span className="text-xs text-slate-400">
                     {lang === "he" ? "לחץ לחזרה ↺" : "Tap to return ↺"}
@@ -301,21 +471,9 @@ export default function Home() {
                 </div>
 
                 <ul className="space-y-2 text-xs sm:text-sm text-slate-200">
-                  <li>
-                    {lang === "he"
-                      ? "✅ פיתוח מהיר מותאם לתקציב של עסקים מתחילים"
-                      : "✅ Fast development tailored for early-stage businesses"}
-                  </li>
-                  <li>
-                    {lang === "he"
-                      ? "✅ ממשק ניהול נוח בעברית מלאה (RTL)"
-                      : "✅ Clean & intuitive management dashboard"}
-                  </li>
-                  <li>
-                    {lang === "he"
-                      ? "✅ זמינות ישירה בוואטסאפ וליווי אישי"
-                      : "✅ Direct WhatsApp availability & personal support"}
-                  </li>
+                  <li>✅ אפליקציה שעובדת 24/7 ומקבלת לקוחות אוטומטית</li>
+                  <li>✅ ממשק ניהול קל ונוח בעברית מלאה (RTL)</li>
+                  <li>✅ 100% בעלות שלך על המערכת ללא דמי מנוי כובלים</li>
                 </ul>
 
                 <div className="flex items-center justify-between pt-2 border-t border-white/10">
@@ -329,6 +487,288 @@ export default function Home() {
               </div>
             )}
           </div>
+        </section>
+
+        {/* ================= קובץ הכלים החכמים (SiteTools) ================= */}
+        <SiteTools
+          accent={accent}
+          setAccent={setAccent}
+          lang={lang}
+          setLang={setLang}
+          isDark={isDark}
+        />
+
+        {/* ================= 3. סרטון הדגמה קצר (15 שניות) של האפליקציות בפעולה ================= */}
+        <section id="demo" className={`border rounded-2xl p-5 space-y-4 scroll-mt-20 ${bgCard}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span className={`text-xs font-bold block ${theme.text}`}>
+                🎬 הדגמה חיה (15 שניות)
+              </span>
+              <h3 className="text-lg font-black">
+                {lang === "he"
+                  ? "איך האפליקציות נראות בפעולה?"
+                  : "See the Apps in Action (15s Demo)"}
+              </h3>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveDemoApp("coffee");
+                  setDemoStep(0);
+                  setIsDemoPlaying(true);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                  activeDemoApp === "coffee" ? theme.btn : bgSubCard
+                }`}
+              >
+                ☕ עגלת הקפה
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveDemoApp("barber");
+                  setDemoStep(0);
+                  setIsDemoPlaying(true);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                  activeDemoApp === "barber" ? theme.btn : bgSubCard
+                }`}
+              >
+                ✂️ המספרה
+              </button>
+            </div>
+          </div>
+
+          {/* מסך הדמיית המובייל המונפש */}
+          <div className="rounded-2xl bg-[#0b0c10] text-white border border-white/15 p-5 space-y-4">
+            <div className="flex items-center justify-between text-xs text-slate-400">
+              <span>{currentDemo.step}</span>
+              <button
+                type="button"
+                onClick={() => setIsDemoPlaying(!isDemoPlaying)}
+                className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold cursor-pointer"
+              >
+                {isDemoPlaying ? "⏸ השהה" : "▶️ הפעל"}
+              </button>
+            </div>
+
+            {/* פס התקדמות 15 שניות */}
+            <div className="grid grid-cols-4 gap-1.5">
+              {[0, 1, 2, 3].map((idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setDemoStep(idx)}
+                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                    idx <= demoStep ? theme.barBg : "bg-white/15"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* תוכן המסך המשתנה */}
+            <div className="rounded-xl bg-[#16181f] border border-white/10 p-4 space-y-2 transition-all">
+              <div className="flex items-center justify-between">
+                <span className={`text-xs font-bold ${theme.text}`}>
+                  {currentDemo.screenTitle}
+                </span>
+                <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-bold">
+                  {currentDemo.badge}
+                </span>
+              </div>
+              <p className="text-sm sm:text-base font-extrabold text-white">
+                {currentDemo.screenBody}
+              </p>
+              <p className="text-xs text-slate-400">{currentDemo.title}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ================= 4. השוואה ויזואלית: למה אפליקציה מותאמת אישית עדיפה? ================= */}
+        <section className={`border rounded-2xl p-5 space-y-4 ${bgCard}`}>
+          <div>
+            <span className={`text-xs font-bold block ${theme.text}`}>
+              ⚖️ השוואה ברורה
+            </span>
+            <h3 className="text-lg font-black">
+              {lang === "he"
+                ? "למה אפליקציה מותאמת אישית עדיפה?"
+                : "Why Choose a Custom-Built App?"}
+            </h3>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs sm:text-sm border-collapse">
+              <thead>
+                <tr className={`border-b ${isDark ? "border-white/10" : "border-slate-200"}`}>
+                  <th className="py-3 px-2 text-right font-bold opacity-75">קריטריון</th>
+                  <th className="py-3 px-2 text-center font-bold text-rose-400">
+                    ניהול ידני / תבנית מוכנה
+                  </th>
+                  <th className={`py-3 px-2 text-center font-black ${theme.text}`}>
+                    אפליקציה מותאמת אישית ✨
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-current/10">
+                <tr>
+                  <td className="py-3 px-2 font-medium">זמינות ללקוחות</td>
+                  <td className="py-3 px-2 text-center opacity-75">רק כשאתה פנוי לענות ❌</td>
+                  <td className="py-3 px-2 text-center font-bold text-emerald-400">
+                    24/7 אוטומטי לגמרי ✅
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-2 font-medium">התאמה לתהליך העסק</td>
+                  <td className="py-3 px-2 text-center opacity-75">מוגבל לתבנית קבועה ❌</td>
+                  <td className="py-3 px-2 text-center font-bold text-emerald-400">
+                    תפור בול לצרכים שלך ✅
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-2 font-medium">חוויית משתמש במובייל</td>
+                  <td className="py-3 px-2 text-center opacity-75">איטית ומסורבלת ❌</td>
+                  <td className="py-3 px-2 text-center font-bold text-emerald-400">
+                    מהירה, חלקה ומודרנית ✅
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-2 font-medium">בעלות ושליטה</td>
+                  <td className="py-3 px-2 text-center opacity-75">תלות בפלטפורמה חיצונית ❌</td>
+                  <td className="py-3 px-2 text-center font-bold text-emerald-400">
+                    100% בבעלותך המלאה ✅
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* ================= 5. חידון קצר: איזו מערכת תקפיץ את העסק שלך? (ללא מחיר!) ================= */}
+        <section className={`border rounded-2xl p-5 space-y-4 ${bgCard}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className={`text-xs font-bold block ${theme.text}`}>
+                🎯 התאמה חכמה ב-3 שאלות
+              </span>
+              <h3 className="text-lg font-black">
+                {lang === "he"
+                  ? "איזו מערכת תקפיץ את העסק שלך?"
+                  : "Which System Will Boost Your Business?"}
+              </h3>
+            </div>
+            {quizStep > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuizStep(0);
+                  setQuizAnswers({ goal: "", clients: "", management: "" });
+                }}
+                className="text-xs opacity-70 hover:opacity-100 underline cursor-pointer"
+              >
+                התחל מחדש
+              </button>
+            )}
+          </div>
+
+          {quizStep === 0 && (
+            <div className="space-y-2.5">
+              <p className="text-xs font-bold">שאלה 1 מתוך 3: מה הדבר שהכי חשוב לך לשפר בעסק?</p>
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  "תורים ויומן לקוחות",
+                  "מכירות והזמנות אונליין",
+                  "השקת רעיון / סטארטאפ חדש (MVP)",
+                ].map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => {
+                      setQuizAnswers({ ...quizAnswers, goal: opt });
+                      setQuizStep(1);
+                    }}
+                    className={`p-3 rounded-xl border text-right text-xs font-bold transition hover:border-amber-400 cursor-pointer ${bgSubCard}`}
+                  >
+                    {opt} ←
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {quizStep === 1 && (
+            <div className="space-y-2.5">
+              <p className="text-xs font-bold">שאלה 2 מתוך 3: איך הלקוחות שלך פונים אליך היום?</p>
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  "בעיקר בוואטסאפ ובטלפון (גוזל המון זמן)",
+                  "מגיעים פיזית / דרך הרשתות החברתיות",
+                  "עדיין בשלב הרעיון — לפני השקה",
+                ].map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => {
+                      setQuizAnswers({ ...quizAnswers, clients: opt });
+                      setQuizStep(2);
+                    }}
+                    className={`p-3 rounded-xl border text-right text-xs font-bold transition hover:border-amber-400 cursor-pointer ${bgSubCard}`}
+                  >
+                    {opt} ←
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {quizStep === 2 && (
+            <div className="space-y-2.5">
+              <p className="text-xs font-bold">שאלה 3 מתוך 3: איזו שליטה תרצה מאחורי הקלעים?</p>
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  "פאנל ניהול מלא לעריכת שעות, מוצרים ולקוחות",
+                  "התראות אוטומטיות ישירות לנייד שלי",
+                  "מערכת פשוטה וקלה לתפעול בלי להתעסק בטכנולוגיה",
+                ].map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => {
+                      setQuizAnswers({ ...quizAnswers, management: opt });
+                      setQuizStep(3);
+                    }}
+                    className={`p-3 rounded-xl border text-right text-xs font-bold transition hover:border-amber-400 cursor-pointer ${bgSubCard}`}
+                  >
+                    {opt} ←
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {quizStep === 3 && (
+            <div className={`rounded-xl border p-4 space-y-3 ${theme.heroBg}`}>
+              <span className={`text-xs font-bold block ${theme.text}`}>
+                ✨ הפתרון המומלץ עבורך:
+              </span>
+              <h4 className="text-base sm:text-lg font-black">
+                {getQuizRecommendation().title}
+              </h4>
+              <p className={`text-xs leading-relaxed ${textMuted}`}>
+                {getQuizRecommendation().desc}
+              </p>
+              <button
+                type="button"
+                onClick={handleSendQuizToWhatsApp}
+                className={`w-full py-3 px-4 rounded-xl font-extrabold text-xs sm:text-sm transition shadow-md cursor-pointer ${theme.btn}`}
+              >
+                שלח את התוצאה לגילעד לשיחת אפיון קצרה 📲
+              </button>
+            </div>
+          )}
         </section>
 
         {/* ================= שירותים וסינון ================= */}
