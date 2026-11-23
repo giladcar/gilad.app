@@ -15,17 +15,21 @@ export default function Home() {
   const [accent, setAccent] = useState<AccentColor>("amber");
   const [lang, setLang] = useState<Language>("he");
 
-  // Category Filter
-  const [selectedCategory, setSelectedCategory] = useState<"all" | "mvp" | "business">("all");
-
-  // Animated Card / GIF Flip
+  // Animated Card Flip
   const [isCardFlipped, setIsCardFlipped] = useState(false);
-  const [gifError, setGifError] = useState(false);
 
-  // 15-Second Interactive App Demo Player
-  const [activeDemoApp, setActiveDemoApp] = useState<"coffee" | "barber">("coffee");
-  const [demoStep, setDemoStep] = useState<number>(0);
-  const [isDemoPlaying, setIsDemoPlaying] = useState<boolean>(true);
+  // ================= 100% SAFE LOCAL SANDBOX DEMO (NO REAL SERVERS!) =================
+  const [sandboxTab, setSandboxTab] = useState<"barber" | "coffee">("barber");
+
+  // Barber Sandbox State
+  const [barberService, setBarberService] = useState("תספורת גברים");
+  const [barberTime, setBarberTime] = useState("16:30");
+  const [barberBooked, setBarberBooked] = useState(false);
+
+  // Coffee Sandbox State
+  const [coffeeDrink, setCoffeeDrink] = useState("הפוך גדול");
+  const [coffeeMilk, setCoffeeMilk] = useState("חלב שיבולת");
+  const [coffeeOrdered, setCoffeeOrdered] = useState(false);
 
   // 3-Question Business Quiz (No prices!)
   const [quizStep, setQuizStep] = useState<number>(0);
@@ -44,7 +48,6 @@ export default function Home() {
   const [leadPhone, setLeadPhone] = useState("");
   const [leadBusiness, setLeadBusiness] = useState("");
 
-  // Splash Screen Timer
   useEffect(() => {
     const fadeTimer = setTimeout(() => setFadeSplash(true), 1700);
     const hideTimer = setTimeout(() => setShowSplash(false), 2200);
@@ -53,15 +56,6 @@ export default function Home() {
       clearTimeout(hideTimer);
     };
   }, []);
-
-  // 15-Second Demo Loop (4 steps x 3.75s = 15s)
-  useEffect(() => {
-    if (!isDemoPlaying) return;
-    const interval = setInterval(() => {
-      setDemoStep((prev) => (prev + 1) % 4);
-    }, 3750);
-    return () => clearInterval(interval);
-  }, [isDemoPlaying, activeDemoApp]);
 
   const handleLeadSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +67,6 @@ export default function Home() {
     window.open(`https://wa.me/972527431770?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
-  // המלצת החידון לפי התשובות (ללא מחיר!)
   const getQuizRecommendation = () => {
     if (quizAnswers.goal === "תורים ויומן לקוחות") {
       return {
@@ -107,54 +100,54 @@ export default function Home() {
       text: string;
       badge: string;
       border: string;
+      glow: string;
       heroBg: string;
       spinBorder: string;
-      barBg: string;
     }
   > = {
     amber: {
-      btn: "bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-500/20",
+      btn: "bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-500/25",
       text: "text-amber-400",
       badge: "bg-amber-400/15 text-amber-400 border-amber-400/30",
       border: "border-amber-400/40",
+      glow: "shadow-[0_0_50px_rgba(251,191,36,0.18)]",
       heroBg: isDark
-        ? "bg-gradient-to-l from-amber-500/15 via-[#16181f] to-[#16181f] border-amber-500/30"
-        : "bg-gradient-to-l from-amber-100 via-white to-white border-amber-300",
+        ? "bg-gradient-to-br from-amber-500/20 via-[#16181f] to-[#0b0c10] border-amber-500/30"
+        : "bg-gradient-to-br from-amber-100 via-white to-amber-50 border-amber-300",
       spinBorder: "border-amber-500/20 border-t-amber-400 border-r-amber-400",
-      barBg: "bg-amber-400",
     },
     cyan: {
-      btn: "bg-cyan-400 hover:bg-cyan-300 text-slate-950 shadow-cyan-500/20",
+      btn: "bg-cyan-400 hover:bg-cyan-300 text-slate-950 shadow-cyan-500/25",
       text: "text-cyan-400",
       badge: "bg-cyan-400/15 text-cyan-400 border-cyan-400/30",
       border: "border-cyan-400/40",
+      glow: "shadow-[0_0_50px_rgba(34,211,238,0.18)]",
       heroBg: isDark
-        ? "bg-gradient-to-l from-cyan-500/15 via-[#16181f] to-[#16181f] border-cyan-500/30"
-        : "bg-gradient-to-l from-cyan-100 via-white to-white border-cyan-300",
+        ? "bg-gradient-to-br from-cyan-500/20 via-[#16181f] to-[#0b0c10] border-cyan-500/30"
+        : "bg-gradient-to-br from-cyan-100 via-white to-cyan-50 border-cyan-300",
       spinBorder: "border-cyan-500/20 border-t-cyan-400 border-r-cyan-400",
-      barBg: "bg-cyan-400",
     },
     purple: {
-      btn: "bg-purple-500 hover:bg-purple-400 text-white shadow-purple-500/20",
+      btn: "bg-purple-500 hover:bg-purple-400 text-white shadow-purple-500/25",
       text: "text-purple-400",
       badge: "bg-purple-500/15 text-purple-400 border-purple-400/30",
       border: "border-purple-400/40",
+      glow: "shadow-[0_0_50px_rgba(168,85,247,0.22)]",
       heroBg: isDark
-        ? "bg-gradient-to-l from-purple-500/15 via-[#16181f] to-[#16181f] border-purple-500/30"
-        : "bg-gradient-to-l from-purple-100 via-white to-white border-purple-300",
+        ? "bg-gradient-to-br from-purple-500/20 via-[#16181f] to-[#0b0c10] border-purple-500/30"
+        : "bg-gradient-to-br from-purple-100 via-white to-purple-50 border-purple-300",
       spinBorder: "border-purple-500/20 border-t-purple-400 border-r-purple-400",
-      barBg: "bg-purple-500",
     },
     emerald: {
-      btn: "bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-emerald-500/20",
+      btn: "bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-emerald-500/25",
       text: "text-emerald-400",
       badge: "bg-emerald-400/15 text-emerald-400 border-emerald-400/30",
       border: "border-emerald-400/40",
+      glow: "shadow-[0_0_50px_rgba(52,211,153,0.18)]",
       heroBg: isDark
-        ? "bg-gradient-to-l from-emerald-500/15 via-[#16181f] to-[#16181f] border-emerald-500/30"
-        : "bg-gradient-to-l from-emerald-100 via-white to-white border-emerald-300",
+        ? "bg-gradient-to-br from-emerald-500/20 via-[#16181f] to-[#0b0c10] border-emerald-500/30"
+        : "bg-gradient-to-br from-emerald-100 via-white to-emerald-50 border-emerald-300",
       spinBorder: "border-emerald-500/20 border-t-emerald-400 border-r-emerald-400",
-      barBg: "bg-emerald-400",
     },
   };
 
@@ -163,72 +156,6 @@ export default function Home() {
   const bgCard = isDark ? "bg-[#16181f] border-white/10" : "bg-white border-slate-200 shadow-sm";
   const bgSubCard = isDark ? "bg-[#222530] border-white/10" : "bg-slate-100 border-slate-200";
   const textMuted = isDark ? "text-slate-400" : "text-slate-600";
-
-  // שלבי סרטון ההדגמה (15 שניות)
-  const coffeeDemoSteps = [
-    {
-      step: "שלב 1 מתוך 4 (00:03)",
-      title: "הלקוח פותח את התפריט מהנייד",
-      screenTitle: "☕ עגלת הקפה — תפריט חי",
-      screenBody: "בוחר: הפוך גדול • חלב שיבולת • רותח",
-      badge: "ללא המתנה בתור",
-    },
-    {
-      step: "שלב 2 מתוך 4 (00:07)",
-      title: "בחירת שעת איסוף מדויקת",
-      screenTitle: "⚡ הזמן שוב את הקבוע שלך",
-      screenBody: "שעת איסוף נבחרה: 08:45 (עוד 10 דק')",
-      badge: "חוסך שיחות טלפון",
-    },
-    {
-      step: "שלב 3 מתוך 4 (00:11)",
-      title: "אישור הזמנה בקליק אחד",
-      screenTitle: "✅ ההזמנה נשלחה לעמדה!",
-      screenBody: "מספר הזמנה #42 • מתכונן עכשיו",
-      badge: "התראה מיידית לעסק",
-    },
-    {
-      step: "שלב 4 מתוך 4 (00:15)",
-      title: "הלקוח אוסף והעסק מרוויח יותר",
-      screenTitle: "🎉 מוכן לאיסוף!",
-      screenBody: "חוויית שירות מהירה שמחזירה לקוחות שוב ושוב",
-      badge: "100% אוטומטי",
-    },
-  ];
-
-  const barberDemoSteps = [
-    {
-      step: "שלב 1 מתוך 4 (00:03)",
-      title: "הלקוח בוחר סוג טיפול",
-      screenTitle: "✂️ המספרה — שלב 1 מתוך 3",
-      screenBody: "נבחר: תספורת רגילה (35 דקות)",
-      badge: "פשוט וברור",
-    },
-    {
-      step: "שלב 2 מתוך 4 (00:07)",
-      title: "בחירת יום ושעה פנויה ביומן",
-      screenTitle: "📅 בחר שעה פנויה",
-      screenBody: "יום שלישי • שעה 16:30 זמינה",
-      badge: "מסונכרן בזמן אמת",
-    },
-    {
-      step: "שלב 3 מתוך 4 (00:11)",
-      title: "התור נרשם אוטומטית אצלך",
-      screenTitle: "✅ התור אושר בהצלחה!",
-      screenBody: "נכנס ליומן הניהול + תזכורת ללקוח",
-      badge: "אפס התעסקות בוואטסאפ",
-    },
-    {
-      step: "שלב 4 מתוך 4 (00:15)",
-      title: "היומן מלא בלי שתענה לטלפונים",
-      screenTitle: "📊 יומן מסודר 24/7",
-      screenBody: "לקוחות קובעים תור גם ב-23:00 בלילה",
-      badge: "עובד בשבילך 24/7",
-    },
-  ];
-
-  const currentDemo =
-    activeDemoApp === "coffee" ? coffeeDemoSteps[demoStep] : barberDemoSteps[demoStep];
 
   return (
     <div
@@ -256,7 +183,7 @@ export default function Home() {
               {lang === "he" ? "גילעד קרליבך" : "Gilad Karlibach"}
             </h1>
             <p className="text-sm text-slate-400 animate-pulse">
-              {lang === "he" ? "טוען את האתר..." : "Loading..."}
+              {lang === "he" ? "טוען את חוויית האפליקציה..." : "Loading experience..."}
             </p>
           </div>
           <div
@@ -270,13 +197,13 @@ export default function Home() {
 
       {/* ================= TOP BANNER ================= */}
       <div
-        className={`border-b py-2 px-4 text-center text-xs font-medium ${
+        className={`border-b py-2 px-4 text-center text-xs font-bold ${
           isDark ? `bg-[#16181f] border-white/10 ${theme.text}` : `${theme.btn} border-black/10`
         }`}
       >
         {lang === "he"
-          ? "⚡ פיתוח אפליקציות ומערכות חכמות לעסקים מתחילים • ליווי אישי מקצה לקצה"
-          : "⚡ Smart App & Web Development for Startups • End-to-End Personal Guidance"}
+          ? "🎁 הטבת השקה: אפיון ראשוני וסקיצת מסך לעסק שלך במתנה — ללא התחייבות!"
+          : "🎁 Launch Offer: Free Initial App Blueprint & Mockup for Your Business!"}
       </div>
 
       {/* ================= HEADER ================= */}
@@ -298,9 +225,7 @@ export default function Home() {
                 {lang === "he" ? "גילעד קרליבך" : "Gilad Karlibach"}
               </h2>
               <p className={`text-xs ${textMuted}`}>
-                {lang === "he"
-                  ? "פיתוח אפליקציות לעסקים מתחילים"
-                  : "App Development for Startups"}
+                {lang === "he" ? "יוצר אפליקציות לעסקים" : "Business App Creator"}
               </p>
             </div>
           </div>
@@ -309,7 +234,6 @@ export default function Home() {
             <button
               onClick={() => setIsDark(!isDark)}
               className={`px-3 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${bgCard}`}
-              title={lang === "he" ? "החלף ערכת נושא" : "Toggle Theme"}
             >
               <span>{isDark ? "☀️" : "🌙"}</span>
               <span>{isDark ? (lang === "he" ? "בהיר" : "Light") : lang === "he" ? "כהה" : "Dark"}</span>
@@ -319,7 +243,7 @@ export default function Home() {
               href="https://wa.me/972527431770"
               target="_blank"
               rel="noopener noreferrer"
-              className={`font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-xl transition shadow-md shrink-0 ${theme.btn}`}
+              className={`font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl transition shadow-md shrink-0 ${theme.btn}`}
             >
               {lang === "he" ? "דבר איתי" : "Contact"}
             </a>
@@ -328,56 +252,308 @@ export default function Home() {
       </header>
 
       {/* ================= MAIN CONTAINER ================= */}
-      <main id="top" className="max-w-2xl mx-auto px-4 py-6 space-y-7">
-        {/* ================= 1. כותרת ראשית מוכוונת תוצאה ================= */}
-        <section className={`rounded-2xl border p-6 shadow-sm space-y-4 ${theme.heroBg}`}>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>
-              {lang === "he"
-                ? "פנויים לקבלת פרויקטים חדשים"
-                : "Available for New Projects"}
+      <main id="top" className="max-w-2xl mx-auto px-4 py-6 space-y-8">
+        {/* ================= 1. HERO SECTION מושך וממוקד מכירה ================= */}
+        <section className={`rounded-3xl border p-6 sm:p-8 space-y-5 relative overflow-hidden ${theme.heroBg} ${theme.glow}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>
+                {lang === "he"
+                  ? "נותרו 2 מקומות פנויים לחודש הקרוב"
+                  : "2 Slots Left This Month"}
+              </span>
+            </div>
+            <span className="text-xs font-mono opacity-70" dir="ltr">
+              100% CUSTOM APPS
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-black leading-tight">
+          <h1 className="text-2xl sm:text-4xl font-black leading-tight tracking-tight">
             {lang === "he"
               ? "הפוך את העסק שלך למכונה שעובדת 24/7 — אפליקציה מותאמת אישית שמביאה לקוחות וחוסכת שעות עבודה"
               : "Turn Your Business into a 24/7 Engine — Custom Apps That Bring Clients & Save Hours"}
           </h1>
 
-          <p className={`text-xs sm:text-sm leading-relaxed ${textMuted}`}>
+          <p className={`text-sm sm:text-base leading-relaxed ${textMuted}`}>
             {lang === "he"
-              ? "בלי לרדוף אחרי הודעות בוואטסאפ ובלי לשרוף תקציבי ענק. אני בונה עבורך אפליקציה חכמה, מהירה ומעוצבת שעובדת בשבילך מסביב לשעון."
-              : "Stop chasing messages manually. I build fast, modern custom apps that work for your business around the clock."}
+              ? "נמאס לך לרשום תורים בוואטסאפ או לפספס הזמנות כשאתה עסוק? אני בונה עבורך אפליקציה חכמה ומהירה שסוגרת עסקאות בשבילך גם כשאתה ישן."
+              : "Tired of managing bookings manually? I build fast, custom apps that close deals for you even while you sleep."}
           </p>
 
-          <div className="flex flex-wrap gap-3 pt-1">
+          {/* 3 מדדי אמון מהירים */}
+          <div className="grid grid-cols-3 gap-2 pt-1">
+            <div className={`rounded-2xl border p-3 text-center ${bgCard}`}>
+              <div className={`text-lg sm:text-xl font-black ${theme.text}`}>24/7</div>
+              <div className="text-[11px] opacity-80">קבלת לקוחות אוטומטית</div>
+            </div>
+            <div className={`rounded-2xl border p-3 text-center ${bgCard}`}>
+              <div className={`text-lg sm:text-xl font-black ${theme.text}`}>100%</div>
+              <div className="text-[11px] opacity-80">בעלות שלך על הקוד</div>
+            </div>
+            <div className={`rounded-2xl border p-3 text-center ${bgCard}`}>
+              <div className={`text-lg sm:text-xl font-black ${theme.text}`}>0.4s</div>
+              <div className="text-[11px] opacity-80">מהירות טעינה בנייד</div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <a
-              href="https://wa.me/972527431770"
+              href="https://wa.me/972527431770?text=היי%20גילעד,%20ראיתי%20את%20האתר%20שלך%20ואני%20רוצה%20לבדוק%20אפליקציה%20לעסק%20שלי"
               target="_blank"
               rel="noopener noreferrer"
-              className={`font-extrabold text-xs sm:text-sm px-5 py-3 rounded-xl transition shadow-lg ${theme.btn}`}
+              className={`flex-1 text-center font-black text-sm px-6 py-4 rounded-2xl transition shadow-lg transform hover:scale-[1.01] ${theme.btn}`}
             >
-              {lang === "he" ? "בוא נבנה את האפליקציה שלך 🚀" : "Build Your App Now 🚀"}
+              {lang === "he" ? "אני רוצה לבדוק היתכנות לעסק שלי 🚀" : "Check Feasibility for My Business 🚀"}
             </a>
             <a
-              href="#demo"
-              className={`font-bold text-xs sm:text-sm px-5 py-3 rounded-xl border transition ${bgCard}`}
+              href="#sandbox"
+              className={`text-center font-bold text-sm px-5 py-4 rounded-2xl border transition ${bgCard}`}
             >
-              {lang === "he" ? "צפה בהדגמה חיה ▶️" : "Watch Live Demo ▶️"}
+              {lang === "he" ? "נסה הדגמה חיה 📱" : "Try Live Sandbox 📱"}
             </a>
           </div>
         </section>
 
-        {/* ================= 2. אנימציית גרפיקה חיה / GIF בראש העמוד (במקום התמונה) ================= */}
+        {/* ================= 2. ארגז חול אינטראקטיבי בטלפון (100% מאובטח ומקומי — ללא חיבור ללקוחות אמיתיים!) ================= */}
+        <section id="sandbox" className={`border rounded-3xl p-5 sm:p-6 space-y-5 scroll-mt-20 ${bgCard} ${theme.glow}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 mb-1">
+                <span>🛡️</span>
+                <span>סימולטור הדגמה מאובטח (ללא חיבור לשרתים חיצוניים)</span>
+              </div>
+              <h3 className="text-xl font-black">
+                {lang === "he"
+                  ? "תרגיש בידיים איך הלקוחות שלך יזמינו ממך"
+                  : "Experience How Your Clients Will Book"}
+              </h3>
+            </div>
+
+            {/* בחירה בין 2 דוגמאות */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSandboxTab("barber");
+                  setBarberBooked(false);
+                }}
+                className={`px-3.5 py-2 rounded-xl text-xs font-extrabold border transition cursor-pointer ${
+                  sandboxTab === "barber" ? theme.btn : bgSubCard
+                }`}
+              >
+                ✂️ הדגמת תורים
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSandboxTab("coffee");
+                  setCoffeeOrdered(false);
+                }}
+                className={`px-3.5 py-2 rounded-xl text-xs font-extrabold border transition cursor-pointer ${
+                  sandboxTab === "coffee" ? theme.btn : bgSubCard
+                }`}
+              >
+                ☕ הדגמת הזמנות
+              </button>
+            </div>
+          </div>
+
+          {/* מסגרת סמארטפון אמיתית לחיצה */}
+          <div className="max-w-sm mx-auto rounded-[2.2rem] border-[6px] border-slate-800 bg-[#0b0c10] text-white shadow-2xl overflow-hidden">
+            {/* Notch של הטלפון */}
+            <div className="bg-slate-900 py-2 px-5 flex items-center justify-between text-[10px] text-slate-400 border-b border-white/10">
+              <span>9:41</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-black text-[9px] text-slate-300 font-mono">
+                DEMO SANDBOX
+              </span>
+              <span>5G 🔋</span>
+            </div>
+
+            {/* תוכן האפליקציה בתוך הטלפון */}
+            <div className="p-5 space-y-4">
+              {sandboxTab === "barber" ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] text-amber-400 font-bold">הדגמה אינטראקטיבית</span>
+                      <h4 className="font-black text-base">סטודיו לעיצוב שיער (דמו)</h4>
+                    </div>
+                    <span className="text-2xl">✂️</span>
+                  </div>
+
+                  {!barberBooked ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[11px] text-slate-400 block mb-1">1. בחר טיפול:</label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {["תספורת גברים", "תספורת + זקן"].map((srv) => (
+                            <button
+                              key={srv}
+                              type="button"
+                              onClick={() => setBarberService(srv)}
+                              className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                                barberService === srv
+                                  ? "bg-amber-400 text-slate-950 border-amber-400"
+                                  : "bg-[#16181f] border-white/10 text-slate-300"
+                              }`}
+                            >
+                              {srv}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] text-slate-400 block mb-1">2. בחר שעה פנויה:</label>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {["16:30", "17:15", "18:00"].map((tm) => (
+                            <button
+                              key={tm}
+                              type="button"
+                              onClick={() => setBarberTime(tm)}
+                              className={`py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                                barberTime === tm
+                                  ? "bg-amber-400 text-slate-950 border-amber-400"
+                                  : "bg-[#16181f] border-white/10 text-slate-300"
+                              }`}
+                            >
+                              {tm}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setBarberBooked(true)}
+                        className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition cursor-pointer"
+                      >
+                        אשר תור עכשיו (נסה ללחוץ!) ✓
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl bg-emerald-500/15 border border-emerald-500/30 p-4 text-center space-y-2">
+                      <div className="text-2xl">🎉</div>
+                      <h5 className="font-black text-sm text-emerald-400">התור נקבע בהצלחה בהדגמה!</h5>
+                      <p className="text-xs text-slate-300">
+                        {barberService} • שעה {barberTime}
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        ככה בדיוק הלקוחות שלך יקבעו תור בלי להפריע לך באמצע העבודה!
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setBarberBooked(false)}
+                        className="text-xs underline text-amber-400 font-bold cursor-pointer pt-1"
+                      >
+                        נסה שוב ↻
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] text-cyan-400 font-bold">הדגמה אינטראקטיבית</span>
+                      <h4 className="font-black text-base">קפה הבוקר — הזמנה מהירה</h4>
+                    </div>
+                    <span className="text-2xl">☕</span>
+                  </div>
+
+                  {!coffeeOrdered ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[11px] text-slate-400 block mb-1">1. בחר משקה:</label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {["הפוך גדול", "אייס קפה"].map((drk) => (
+                            <button
+                              key={drk}
+                              type="button"
+                              onClick={() => setCoffeeDrink(drk)}
+                              className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                                coffeeDrink === drk
+                                  ? "bg-cyan-400 text-slate-950 border-cyan-400"
+                                  : "bg-[#16181f] border-white/10 text-slate-300"
+                              }`}
+                            >
+                              {drk}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] text-slate-400 block mb-1">2. התאמה אישית:</label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {["חלב רגיל", "חלב שיבולת"].map((mlk) => (
+                            <button
+                              key={mlk}
+                              type="button"
+                              onClick={() => setCoffeeMilk(mlk)}
+                              className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                                coffeeMilk === mlk
+                                  ? "bg-cyan-400 text-slate-950 border-cyan-400"
+                                  : "bg-[#16181f] border-white/10 text-slate-300"
+                              }`}
+                            >
+                              {mlk}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setCoffeeOrdered(true)}
+                        className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition cursor-pointer"
+                      >
+                        שלח הזמנת דמה לעמדה 🚀
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl bg-emerald-500/15 border border-emerald-500/30 p-4 text-center space-y-2">
+                      <div className="text-2xl">☕✨</div>
+                      <h5 className="font-black text-sm text-emerald-400">ההזמנה התקבלה בהדגמה!</h5>
+                      <p className="text-xs text-slate-300">
+                        {coffeeDrink} ({coffeeMilk})
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        הלקוח מזמין מראש, אוסף בלי תור, ואתה מוכר יותר!
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setCoffeeOrdered(false)}
+                        className="text-xs underline text-cyan-400 font-bold cursor-pointer pt-1"
+                      >
+                        נסה שוב ↻
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="text-center pt-1">
+            <a
+              href="https://wa.me/972527431770?text=היי%20גילעד,%20ניסיתי%20את%20ההדגמה%20באתר%20ואשמח%20לאפליקציה%20כזו%20לעסק%20שלי!"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-block font-extrabold text-xs sm:text-sm px-6 py-3 rounded-xl transition shadow-md ${theme.btn}`}
+            >
+              אהבת? בוא נבנה מערכת כזו בדיוק לעסק שלך 📲
+            </a>
+          </div>
+        </section>
+
+        {/* ================= 3. כרטיס ביקור מונפש ואינטראקטיבי ================= */}
         <section className="space-y-2.5">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              <span>
-                {lang === "he" ? "כרטיס ביקור חי ואינטראקטיבי" : "Live Animated Business Card"}
-              </span>
+              <span>{lang === "he" ? "כרטיס הביקור הדיגיטלי" : "Digital Business Card"}</span>
             </h3>
             <button
               onClick={() => setIsCardFlipped(!isCardFlipped)}
@@ -387,74 +563,43 @@ export default function Home() {
             </button>
           </div>
 
-          <div
-            onClick={() => setIsCardFlipped(!isCardFlipped)}
-            className="cursor-pointer select-none"
-          >
+          <div onClick={() => setIsCardFlipped(!isCardFlipped)} className="cursor-pointer select-none">
             {!isCardFlipped ? (
               <div
-                className={`relative rounded-2xl overflow-hidden border shadow-2xl aspect-[3/2] bg-[#060b19] ${theme.border}`}
+                className={`relative rounded-2xl overflow-hidden border shadow-xl aspect-[3/2] bg-[#060b19] p-6 flex flex-col justify-between text-white ${theme.border}`}
               >
-                {/* אם תשמור את ה-GIF בשם public/business-card.gif הוא יוצג אוטומטית; אחרת תוצג אנימציית הייטק חיה */}
-                {!gifError ? (
-                  <img
-                    src="/gilad.app/business-card.gif"
-                    alt="כרטיס ביקור מונפש גילעד קרליבך"
-                    onError={() => setGifError(true)}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full relative overflow-hidden p-6 flex flex-col justify-between text-white">
-                    {/* רקע אנימציית רשת וזוהר חי */}
-                    <div className="absolute -top-16 -left-16 w-56 h-56 rounded-full bg-cyan-500/25 blur-3xl animate-pulse" />
-                    <div className="absolute -bottom-16 -right-16 w-56 h-56 rounded-full bg-purple-600/25 blur-3xl animate-pulse" />
-                    <div
-                      className="absolute inset-0 opacity-20"
-                      style={{
-                        backgroundImage:
-                          "radial-gradient(circle at 2px 2px, rgba(56,189,248,0.6) 1px, transparent 0)",
-                        backgroundSize: "24px 24px",
-                      }}
-                    />
+                <div className="absolute -top-16 -left-16 w-56 h-56 rounded-full bg-cyan-500/20 blur-3xl animate-pulse" />
+                <div className="absolute -bottom-16 -right-16 w-56 h-56 rounded-full bg-purple-600/20 blur-3xl animate-pulse" />
 
-                    {/* שורה עליונה מונפשת */}
-                    <div className="relative z-10 flex items-center justify-between">
-                      <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-white/10 border border-cyan-400/30 backdrop-blur-md">
-                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                        <span className="text-xs font-mono text-cyan-300" dir="ltr">
-                          &lt;GiladApps LIVE /&gt;
-                        </span>
-                      </div>
-                      <div className="w-10 h-10 rounded-xl border border-purple-400/40 flex items-center justify-center animate-spin-slow">
-                        <span className="text-cyan-300 text-xs font-bold">⚡</span>
-                      </div>
-                    </div>
+                <div className="relative z-10 flex items-center justify-between">
+                  <span
+                    className="px-3 py-1 rounded-xl bg-white/10 border border-cyan-400/30 text-xs font-mono text-cyan-300"
+                    dir="ltr"
+                  >
+                    &lt;GiladApps /&gt;
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {lang === "he" ? "לחץ להיפוך ↻" : "Tap to flip ↻"}
+                  </span>
+                </div>
 
-                    {/* מרכז הכרטיס */}
-                    <div className={`relative z-10 ${lang === "he" ? "text-right" : "text-left"}`}>
-                      <h4 className="text-2xl sm:text-4xl font-black tracking-tight text-white drop-shadow">
-                        {lang === "he" ? "גילעד קרליבך" : "Gilad Karlibach"}
-                      </h4>
-                      <p className="text-transparent bg-clip-text bg-gradient-to-l from-cyan-300 to-purple-300 font-bold text-sm sm:text-lg mt-1">
-                        {lang === "he"
-                          ? "פיתוח אפליקציות לעסקים מתחילים"
-                          : "App Development for Startups"}
-                      </p>
-                    </div>
+                <div className={`relative z-10 ${lang === "he" ? "text-right" : "text-left"}`}>
+                  <h4 className="text-2xl sm:text-3xl font-black text-white">
+                    {lang === "he" ? "גילעד קרליבך" : "Gilad Karlibach"}
+                  </h4>
+                  <p className="text-cyan-400 font-bold text-sm sm:text-base mt-1">
+                    {lang === "he"
+                      ? "פיתוח אפליקציות לעסקים מתחילים"
+                      : "App Development for Startups"}
+                  </p>
+                </div>
 
-                    {/* פרטי קשר תחתונים */}
-                    <div
-                      className="relative z-10 flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-white/10 text-xs sm:text-sm text-cyan-200 font-mono"
-                      dir="ltr"
-                    >
-                      <span>✉️ gilad.creating.apps@gmail.com</span>
-                      <span>📞 0527431770</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="absolute bottom-2.5 right-2.5 bg-black/70 backdrop-blur-sm text-white text-[11px] px-2.5 py-1 rounded-lg border border-white/15">
-                  {lang === "he" ? "לחץ לצד האחורי ↻" : "Tap to flip ↻"}
+                <div
+                  className="relative z-10 flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-white/10 text-xs text-slate-300 font-mono"
+                  dir="ltr"
+                >
+                  <span>✉️ gilad.creating.apps@gmail.com</span>
+                  <span>📞 0527431770</span>
                 </div>
               </div>
             ) : (
@@ -463,7 +608,7 @@ export default function Home() {
               >
                 <div className="flex items-center justify-between">
                   <span className={`text-xs font-bold ${theme.text}`}>
-                    {lang === "he" ? "היתרונות שלך איתי:" : "Your Advantages:"}
+                    {lang === "he" ? "למה לבחור בי לעסק שלך?" : "Why work with me?"}
                   </span>
                   <span className="text-xs text-slate-400">
                     {lang === "he" ? "לחץ לחזרה ↺" : "Tap to return ↺"}
@@ -489,7 +634,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= קובץ הכלים החכמים (SiteTools) ================= */}
+        {/* ================= 4. קובץ הכלים החכמים (SiteTools) ================= */}
         <SiteTools
           accent={accent}
           setAccent={setAccent}
@@ -498,96 +643,7 @@ export default function Home() {
           isDark={isDark}
         />
 
-        {/* ================= 3. סרטון הדגמה קצר (15 שניות) של האפליקציות בפעולה ================= */}
-        <section id="demo" className={`border rounded-2xl p-5 space-y-4 scroll-mt-20 ${bgCard}`}>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <span className={`text-xs font-bold block ${theme.text}`}>
-                🎬 הדגמה חיה (15 שניות)
-              </span>
-              <h3 className="text-lg font-black">
-                {lang === "he"
-                  ? "איך האפליקציות נראות בפעולה?"
-                  : "See the Apps in Action (15s Demo)"}
-              </h3>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveDemoApp("coffee");
-                  setDemoStep(0);
-                  setIsDemoPlaying(true);
-                }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
-                  activeDemoApp === "coffee" ? theme.btn : bgSubCard
-                }`}
-              >
-                ☕ עגלת הקפה
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveDemoApp("barber");
-                  setDemoStep(0);
-                  setIsDemoPlaying(true);
-                }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
-                  activeDemoApp === "barber" ? theme.btn : bgSubCard
-                }`}
-              >
-                ✂️ המספרה
-              </button>
-            </div>
-          </div>
-
-          {/* מסך הדמיית המובייל המונפש */}
-          <div className="rounded-2xl bg-[#0b0c10] text-white border border-white/15 p-5 space-y-4">
-            <div className="flex items-center justify-between text-xs text-slate-400">
-              <span>{currentDemo.step}</span>
-              <button
-                type="button"
-                onClick={() => setIsDemoPlaying(!isDemoPlaying)}
-                className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold cursor-pointer"
-              >
-                {isDemoPlaying ? "⏸ השהה" : "▶️ הפעל"}
-              </button>
-            </div>
-
-            {/* פס התקדמות 15 שניות */}
-            <div className="grid grid-cols-4 gap-1.5">
-              {[0, 1, 2, 3].map((idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setDemoStep(idx)}
-                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                    idx <= demoStep ? theme.barBg : "bg-white/15"
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* תוכן המסך המשתנה */}
-            <div className="rounded-xl bg-[#16181f] border border-white/10 p-4 space-y-2 transition-all">
-              <div className="flex items-center justify-between">
-                <span className={`text-xs font-bold ${theme.text}`}>
-                  {currentDemo.screenTitle}
-                </span>
-                <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-bold">
-                  {currentDemo.badge}
-                </span>
-              </div>
-              <p className="text-sm sm:text-base font-extrabold text-white">
-                {currentDemo.screenBody}
-              </p>
-              <p className="text-xs text-slate-400">{currentDemo.title}</p>
-            </div>
-          </div>
-        </section>
-
-        {/* ================= 4. השוואה ויזואלית: למה אפליקציה מותאמת אישית עדיפה? ================= */}
+        {/* ================= 5. השוואה ויזואלית: למה אפליקציה מותאמת אישית עדיפה? ================= */}
         <section className={`border rounded-2xl p-5 space-y-4 ${bgCard}`}>
           <div>
             <span className={`text-xs font-bold block ${theme.text}`}>
@@ -647,7 +703,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= 5. חידון קצר: איזו מערכת תקפיץ את העסק שלך? (ללא מחיר!) ================= */}
+        {/* ================= 6. חידון קצר: איזו מערכת תקפיץ את העסק שלך? (ללא מחיר!) ================= */}
         <section className={`border rounded-2xl p-5 space-y-4 ${bgCard}`}>
           <div className="flex items-center justify-between">
             <div>
@@ -771,170 +827,7 @@ export default function Home() {
           )}
         </section>
 
-        {/* ================= שירותים וסינון ================= */}
-        <section id="services" className="space-y-3 scroll-mt-20">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold">
-              {lang === "he" ? "שירותי פיתוח" : "Development Services"}
-            </h3>
-            <span className={`text-xs ${textMuted}`}>
-              {lang === "he" ? "התאמה אישית מלאה" : "100% Custom Built"}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <button
-              onClick={() => setSelectedCategory("all")}
-              className={`px-4 py-2 rounded-full text-xs font-bold transition shrink-0 cursor-pointer ${
-                selectedCategory === "all" ? theme.btn : `${bgCard} border`
-              }`}
-            >
-              {lang === "he" ? "הכל" : "All"}
-            </button>
-            <button
-              onClick={() => setSelectedCategory("mvp")}
-              className={`px-4 py-2 rounded-full text-xs font-bold transition shrink-0 cursor-pointer ${
-                selectedCategory === "mvp" ? theme.btn : `${bgCard} border`
-              }`}
-            >
-              {lang === "he" ? "פיתוח MVP וסטארטאפים" : "MVP & Startups"}
-            </button>
-            <button
-              onClick={() => setSelectedCategory("business")}
-              className={`px-4 py-2 rounded-full text-xs font-bold transition shrink-0 cursor-pointer ${
-                selectedCategory === "business" ? theme.btn : `${bgCard} border`
-              }`}
-            >
-              {lang === "he" ? "מערכות ניהול ותורים" : "Booking & Management"}
-            </button>
-          </div>
-
-          {(selectedCategory === "all" || selectedCategory === "mvp") && (
-            <div className={`border rounded-2xl p-4 transition flex items-center justify-between gap-4 ${bgCard}`}>
-              <div className="space-y-1">
-                <span className={`text-xs px-2.5 py-0.5 rounded-md font-bold border ${theme.badge}`}>
-                  {lang === "he" ? "מומלץ למתחילים" : "Best for Startups"}
-                </span>
-                <h4 className="font-bold text-base">
-                  {lang === "he" ? "פיתוח MVP ראשוני (גרסת השקה)" : "Initial MVP Launch Version"}
-                </h4>
-                <p className={`text-xs leading-relaxed ${textMuted}`}>
-                  {lang === "he"
-                    ? "בניית אפליקציה עובדת ומהירה לבדיקת הרעיון מול לקוחות אמיתיים ומשקיעים בזמן שיא."
-                    : "Build a fast, working app to validate your idea with real customers and investors."}
-                </p>
-              </div>
-              <a
-                href="https://wa.me/972527431770?text=היי%20גילעד,%20אשמח%20לשמוע%20על%20פיתוח%20MVP"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`shrink-0 font-bold text-xs px-3.5 py-2.5 rounded-xl border transition ${bgSubCard} ${theme.text} ${theme.border}`}
-              >
-                {lang === "he" ? "פרטים ←" : "Details →"}
-              </a>
-            </div>
-          )}
-
-          {(selectedCategory === "all" || selectedCategory === "business") && (
-            <div className={`border rounded-2xl p-4 transition flex items-center justify-between gap-4 ${bgCard}`}>
-              <div className="space-y-1">
-                <h4 className="font-bold text-base">
-                  {lang === "he"
-                    ? "אפליקציות ניהול, תורים והזמנות"
-                    : "Booking, Ordering & Management Apps"}
-                </h4>
-                <p className={`text-xs leading-relaxed ${textMuted}`}>
-                  {lang === "he"
-                    ? "מערכות מותאמות אישית לעסקים (מספרות, בתי קפה, קליניקות, נותני שירות ועוד...) שחוסכות זמן ומגדילות מכירות."
-                    : "Custom systems for barbershops, coffee carts, clinics, service providers and more..."}
-                </p>
-              </div>
-              <a
-                href="https://wa.me/972527431770?text=היי%20גילעד,%20אשמח%20לשמוע%20על%20אפליקציה%20לעסק"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`shrink-0 font-bold text-xs px-3.5 py-2.5 rounded-xl border transition ${bgSubCard} ${theme.text} ${theme.border}`}
-              >
-                {lang === "he" ? "פרטים ←" : "Details →"}
-              </a>
-            </div>
-          )}
-
-          {selectedCategory === "all" && (
-            <div className={`border rounded-2xl p-4 transition flex items-center justify-between gap-4 ${bgCard}`}>
-              <div className="space-y-1">
-                <h4 className="font-bold text-base">
-                  {lang === "he"
-                    ? "אתרי תדמית, דפי נחיתה ועוד..."
-                    : "Landing Pages, Business Sites & More..."}
-                </h4>
-                <p className={`text-xs leading-relaxed ${textMuted}`}>
-                  {lang === "he"
-                    ? "עיצוב מודרני מותאם מובייל ב-100%, טעינה מיידית וחיבור ישיר לוואטסאפ ולמערכות העסק."
-                    : "Modern 100% mobile-friendly design with instant loading and direct WhatsApp integration."}
-                </p>
-              </div>
-              <a
-                href="https://wa.me/972527431770?text=היי%20גילעד,%20אשמח%20לשמוע%20על%20בניית%20אתר"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`shrink-0 font-bold text-xs px-3.5 py-2.5 rounded-xl border transition ${bgSubCard} ${theme.text} ${theme.border}`}
-              >
-                {lang === "he" ? "פרטים ←" : "Details →"}
-              </a>
-            </div>
-          )}
-        </section>
-
-        {/* ================= פרויקטים נבחרים ================= */}
-        <section id="projects" className="space-y-3 scroll-mt-20">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold">
-              {lang === "he" ? "פרויקטים נבחרים" : "Featured Projects"}
-            </h3>
-            <span className={`text-xs font-medium ${theme.text}`}>
-              {lang === "he" ? "מערכות חיות" : "Live Systems"}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className={`border rounded-2xl p-4 ${bgCard}`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xl">☕</span>
-                <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-500 font-bold">
-                  {lang === "he" ? "באוויר" : "Live"}
-                </span>
-              </div>
-              <h4 className="font-bold text-sm mb-1">
-                {lang === "he" ? "עגלת הקפה" : "Coffee Cart App"}
-              </h4>
-              <p className={`text-xs ${textMuted}`}>
-                {lang === "he"
-                  ? "אפליקציית הזמנות, תפריט חכם, התאמה אישית של משקאות ואיסוף מהיר."
-                  : "Smart menu ordering app with custom drink options and quick pickup."}
-              </p>
-            </div>
-
-            <div className={`border rounded-2xl p-4 ${bgCard}`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xl">✂️</span>
-                <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-500 font-bold">
-                  {lang === "he" ? "באוויר" : "Live"}
-                </span>
-              </div>
-              <h4 className="font-bold text-sm mb-1">
-                {lang === "he" ? "המספרה — ניהול תורים" : "Barbershop Booking"}
-              </h4>
-              <p className={`text-xs ${textMuted}`}>
-                {lang === "he"
-                  ? "מערכת קביעת תורים ב-3 שלבים פשוטים, בחירת טיפול וניהול יומן לקוחות."
-                  : "3-step appointment booking system with service selection and calendar management."}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ================= טופס השאר פרטים ונחזור אליך ================= */}
+        {/* ================= 7. טופס השאר פרטים ונחזור אליך ================= */}
         <section id="contact" className={`border rounded-2xl p-6 space-y-4 scroll-mt-20 ${bgCard}`}>
           <div className="text-center space-y-1">
             <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${theme.badge}`}>
@@ -1038,24 +931,20 @@ export default function Home() {
         </svg>
       </a>
 
-      {/* ================= תפריט ניווט תחתון (BOTTOM TAB BAR) ================= */}
+      {/* ================= תפריט ניווט תחתון ================= */}
       <nav
         className={`fixed bottom-0 inset-x-0 z-40 border-t backdrop-blur-lg ${
           isDark ? "bg-[#0b0c10]/95 border-white/10" : "bg-white/95 border-slate-200"
         }`}
       >
-        <div className="max-w-2xl mx-auto grid grid-cols-4 py-2 px-2 text-center">
+        <div className="max-w-2xl mx-auto grid grid-cols-3 py-2 px-2 text-center">
           <a href="#top" className={`flex flex-col items-center gap-0.5 py-1 font-bold text-[11px] ${theme.text}`}>
             <span className="text-base">🏠</span>
             <span>{lang === "he" ? "ראשי" : "Home"}</span>
           </a>
-          <a href="#services" className={`flex flex-col items-center gap-0.5 py-1 text-[11px] transition ${textMuted}`}>
-            <span className="text-base">⚡</span>
-            <span>{lang === "he" ? "שירותים" : "Services"}</span>
-          </a>
-          <a href="#projects" className={`flex flex-col items-center gap-0.5 py-1 text-[11px] transition ${textMuted}`}>
+          <a href="#sandbox" className={`flex flex-col items-center gap-0.5 py-1 text-[11px] transition ${textMuted}`}>
             <span className="text-base">📱</span>
-            <span>{lang === "he" ? "פרויקטים" : "Projects"}</span>
+            <span>{lang === "he" ? "הדגמה חיה" : "Live Demo"}</span>
           </a>
           <a href="#contact" className={`flex flex-col items-center gap-0.5 py-1 text-[11px] transition ${textMuted}`}>
             <span className="text-base">💬</span>
