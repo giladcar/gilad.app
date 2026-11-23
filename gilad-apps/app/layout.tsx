@@ -1,12 +1,36 @@
-import type { Metadata } from "next";
-import { Heebo } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const heebo = Heebo({ subsets: ["hebrew", "latin"] });
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const viewport: Viewport = {
+  themeColor: "#0b0c10",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
-  title: "גילעד קרליבך | פיתוח אפליקציות לעסקים מתחילים",
-  description: "הופכים רעיונות לאפליקציות עובדות - פיתוח MVP ואפליקציות מותאמות אישית לעסקים מתחילים.",
+  title: "גילעד קרליבך | יוצר אפליקציות לעסקים",
+  description: "פיתוח אפליקציות ומערכות חכמות לעסקים",
+  manifest: "/gilad.app/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "גילעד אפליקציות",
+  },
+  icons: {
+    icon: "/gilad.app/icon-192.png",
+    apple: "/gilad.app/icon-192.png",
+  },
 };
 
 export default function RootLayout({
@@ -17,22 +41,12 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <head>
-        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" async />
-        <style>{`
-          @keyframes spinSlow {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-          @keyframes pulseGlow {
-            0%, 100% { opacity: 0.8; transform: scale(0.98); }
-            50% { opacity: 1; transform: scale(1.03); }
-          }
-          .animate-spin-slow { animation: spinSlow 3s linear infinite; }
-          .animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
-          body { background-color: #0b0c10; color: #ffffff; margin: 0; }
-        `}</style>
+        <link rel="manifest" href="/gilad.app/manifest.json" />
+        <meta name="theme-color" content="#0b0c10" />
       </head>
-      <body className={`${heebo.className} bg-[#0b0c10] text-white antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0b0c10] text-white`}
+      >
         {children}
       </body>
     </html>
