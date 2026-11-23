@@ -3,11 +3,6 @@
 import { useState, useEffect } from "react";
 import SiteTools, { AccentColor, Language } from "./SiteTools";
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
 interface FeaturedProject {
   id: string;
   titleHe: string;
@@ -29,8 +24,8 @@ const FEATURED_PROJECTS: FeaturedProject[] = [
     titleEn: "Appointment Booking & Calendar System",
     categoryHe: "מערכת ניהול ותורים",
     categoryEn: "Booking System",
-    descHe: "ממשק לקוח מהיר לבחירת שירות ושעה פנויה, לצד פאנל ניהול לבעל העסק.",
-    descEn: "Fast client booking interface alongside a dedicated business management panel.",
+    descHe: "ממשק לקוח לבחירת שירות ושעה פנויה, לצד פאנל ניהול לבעל העסק.",
+    descEn: "Client booking interface alongside a dedicated business management panel.",
     imageSrc: "/gilad.app/project-1.png",
     tags: ["Mobile First", "RTL", "Admin Panel"],
   },
@@ -40,10 +35,10 @@ const FEATURED_PROJECTS: FeaturedProject[] = [
     titleEn: "Digital Menu & Ordering App",
     categoryHe: "הזמנות אונליין",
     categoryEn: "Online Ordering",
-    descHe: "תפריט אינטראקטיבי מותאם לנייד עם התאמות אישיות לכל מנה והעברת הזמנות.",
+    descHe: "תפריט אינטראקטיבי מותאם לנייד עם התאמות אישיות לכל פריט והעברת הזמנות.",
     descEn: "Interactive mobile menu with custom item options and streamlined order flow.",
     imageSrc: "/gilad.app/project-2.png",
-    tags: ["Web App", "UI/UX", "Fast Checkout"],
+    tags: ["Web App", "UI/UX", "Custom Flow"],
   },
   {
     id: "proj-3",
@@ -54,7 +49,7 @@ const FEATURED_PROJECTS: FeaturedProject[] = [
     descHe: "מסך ניהול מרכזי לצפייה בנתונים, עריכת זמינות וניהול לקוחות במקום אחד.",
     descEn: "Centralized control screen for viewing data, editing availability, and managing clients.",
     imageSrc: "/gilad.app/project-3.png",
-    tags: ["Dashboard", "Analytics", "Custom System"],
+    tags: ["Dashboard", "Management", "Custom System"],
   },
 ];
 
@@ -69,11 +64,6 @@ export default function Home() {
   // Accent Color & Language (from SiteTools)
   const [accent, setAccent] = useState<AccentColor>("amber");
   const [lang, setLang] = useState<Language>("he");
-
-  // Real PWA Web App Install State
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showIosInstallHelp, setShowIosInstallHelp] = useState(false);
-  const [isAppInstalled, setIsAppInstalled] = useState(false);
 
   // Animated Card Flip
   const [isCardFlipped, setIsCardFlipped] = useState(false);
@@ -119,43 +109,11 @@ export default function Home() {
     const fadeTimer = setTimeout(() => setFadeSplash(true), 1700);
     const hideTimer = setTimeout(() => setShowSplash(false), 2200);
 
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/gilad.app/sw.js").catch(() => {});
-    }
-
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    const handleAppInstalled = () => {
-      setIsAppInstalled(true);
-      setDeferredPrompt(null);
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    window.addEventListener("appinstalled", handleAppInstalled);
-
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(hideTimer);
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-      window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
-
-  const handleInstallWebApp = async () => {
-    if (deferredPrompt) {
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      if (choice.outcome === "accepted") {
-        setIsAppInstalled(true);
-      }
-      setDeferredPrompt(null);
-    } else {
-      setShowIosInstallHelp(!showIosInstallHelp);
-    }
-  };
 
   const handleLeadSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -376,41 +334,83 @@ export default function Home() {
               {lang === "he" ? "שלח הודעה בוואטסאפ 🚀" : "Message on WhatsApp 🚀"}
             </a>
 
-            {!isAppInstalled && (
-              <button
-                type="button"
-                onClick={handleInstallWebApp}
-                className={`font-bold text-xs sm:text-sm px-5 py-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-center gap-2 ${bgCard}`}
-              >
-                <span>📲</span>
-                <span>{lang === "he" ? "התקן כאפליקציה (Web App)" : "Install Web App"}</span>
-              </button>
-            )}
+            <a
+              href="#projects"
+              className={`text-center font-bold text-xs sm:text-sm px-5 py-3.5 rounded-2xl border transition ${bgCard}`}
+            >
+              {lang === "he" ? "צפה בפרויקטים 🖼️" : "View Projects 🖼️"}
+            </a>
           </div>
-
-          {showIosInstallHelp && (
-            <div className={`rounded-xl border p-3.5 text-xs space-y-1 ${bgCard}`}>
-              <div className="font-bold flex items-center justify-between">
-                <span>📲 התקנת אפליקציית ה-Web למכשיר:</span>
-                <button
-                  type="button"
-                  onClick={() => setShowIosInstallHelp(false)}
-                  className="opacity-70 hover:opacity-100 cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-              <p className={textMuted}>
-                • <strong>באנדרואיד (Chrome):</strong> לחץ על שלוש הנקודות (⋮) למעלה ובחר <strong>&quot;התקן אפליקציה&quot;</strong>.
-              </p>
-              <p className={textMuted}>
-                • <strong>באייפון (Safari):</strong> לחץ על כפתור השיתוף למטה ובחר <strong>&quot;הוסף למסך הבית&quot;</strong> — האפליקציה תיפתח בחלון עצמאי מלא.
-              </p>
-            </div>
-          )}
         </section>
 
-        {/* ================= 2. כרטיס הביקור הדיגיטלי ================= */}
+        {/* ================= 2. קצת עליי ומה אנחנו עושים ================= */}
+        <section id="about" className={`border rounded-3xl p-6 space-y-4 scroll-mt-20 ${bgCard}`}>
+          <div className="space-y-1">
+            <span className={`text-xs font-bold block ${theme.text}`}>
+              {lang === "he" ? "👋 נעים להכיר" : "👋 Nice to Meet You"}
+            </span>
+            <h3 className="text-lg sm:text-xl font-black">
+              {lang === "he" ? "קצת עליי ומה אנחנו עושים" : "About Me & What We Do"}
+            </h3>
+          </div>
+
+          <div className="space-y-3 text-xs sm:text-sm leading-relaxed">
+            <p>
+              {lang === "he" ? (
+                <>
+                  שמי <strong>גילעד</strong>, ואני עוסק בתחום בניית האפליקציות ופיתוח מערכות דיגיטליות לעסקים. המטרה שלי היא לקחת את הצרכים היומיומיים של העסק או הרעיון שלכם, ולהפוך אותם למערכת ברורה, נוחה ומסודרת שכל לקוח יכול להשתמש בה בקלות מהנייד או מהמחשב.
+                </>
+              ) : (
+                <>
+                  My name is <strong>Gilad</strong>, and I work in app development and building digital systems for businesses. My focus is turning your business workflow or idea into a clear, intuitive, and well-organized system for both you and your clients.
+                </>
+              )}
+            </p>
+
+            <p className={textMuted}>
+              {lang === "he"
+                ? "אנחנו בונים אתרים ואפליקציות בהתאמה אישית מלאה לפי הבקשה שלכם — החל ממערכות לקביעת תורים וניהול יומן, דרך תפריטים דיגיטליים ומערכות הזמנות, ועד לאתרי תדמית וממשקי ניהול שנבנים בדיוק סביב האופן שבו העסק שלכם עובד."
+                : "We build websites and custom applications tailored specifically to your request — from appointment booking and calendar systems, to digital menus, ordering platforms, and business management interfaces built around your exact workflow."}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-xs">
+            <div className={`p-3.5 rounded-2xl border space-y-1 ${bgSubCard}`}>
+              <div className={`font-black ${theme.text}`}>
+                {lang === "he" ? "📱 אפליקציות לפי דרישה" : "📱 Custom Apps"}
+              </div>
+              <p className={textMuted}>
+                {lang === "he"
+                  ? "בניית אפליקציות מותאמות לצרכים של העסק ולחוויית המשתמש."
+                  : "Apps tailored to your business needs and user experience."}
+              </p>
+            </div>
+
+            <div className={`p-3.5 rounded-2xl border space-y-1 ${bgSubCard}`}>
+              <div className={`font-black ${theme.text}`}>
+                {lang === "he" ? "🌐 אתרים וממשקי ניהול" : "🌐 Websites & Admin Panels"}
+              </div>
+              <p className={textMuted}>
+                {lang === "he"
+                  ? "פיתוח אתרים ומסכי ניהול נוחים לעדכון שעות, מוצרים ופניות."
+                  : "Websites and clean control panels for managing hours, items, and leads."}
+              </p>
+            </div>
+
+            <div className={`p-3.5 rounded-2xl border space-y-1 ${bgSubCard}`}>
+              <div className={`font-black ${theme.text}`}>
+                {lang === "he" ? "🎯 התאמה לבקשת הלקוח" : "🎯 Built to Your Request"}
+              </div>
+              <p className={textMuted}>
+                {lang === "he"
+                  ? "כל מסך, כפתור ותהליך מתוכננים בהתאם למה שביקשתם."
+                  : "Every screen, button, and flow is planned according to your request."}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ================= 3. כרטיס הביקור הדיגיטלי ================= */}
         <section className="space-y-2.5">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold flex items-center gap-2">
@@ -511,7 +511,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= 3. פרויקטים נבחרים (גלריית תמונות בטוחה ללא קישורים חיים) ================= */}
+        {/* ================= 4. פרויקטים נבחרים ================= */}
         <section id="projects" className={`border rounded-3xl p-5 space-y-4 scroll-mt-20 ${bgCard}`}>
           <div className="flex items-center justify-between gap-2">
             <div>
@@ -538,7 +538,6 @@ export default function Home() {
                     !hasFailed ? "cursor-pointer hover:scale-[1.01]" : ""
                   }`}
                 >
-                  {/* אזור התמונה */}
                   <div className="relative aspect-[16/10] bg-[#0b0c10] overflow-hidden flex items-center justify-center border-b border-white/10">
                     {!hasFailed ? (
                       <>
@@ -567,7 +566,6 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* פרטי הפרויקט */}
                   <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
                     <div className="space-y-1">
                       <span className={`text-[11px] font-bold ${theme.text}`}>
@@ -637,7 +635,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ================= 4. הדגמה אינטראקטיבית בטלפון ================= */}
+        {/* ================= 5. הדגמה אינטראקטיבית בטלפון ================= */}
         <section id="sandbox" className={`border rounded-3xl p-5 space-y-4 scroll-mt-20 ${bgCard}`}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-lg font-black">
@@ -843,7 +841,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= 5. קובץ הכלים החכמים (SiteTools) ================= */}
+        {/* ================= 6. קובץ הכלים החכמים (SiteTools) ================= */}
         <SiteTools
           accent={accent}
           setAccent={setAccent}
@@ -852,7 +850,7 @@ export default function Home() {
           isDark={isDark}
         />
 
-        {/* ================= 6. יתרונות אפליקציה מותאמת אישית ================= */}
+        {/* ================= 7. יתרונות אפליקציה מותאמת אישית ================= */}
         <section className={`border rounded-2xl p-5 space-y-3 ${bgCard}`}>
           <h3 className="text-base sm:text-lg font-black">
             {lang === "he"
@@ -876,7 +874,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= 7. שאלון התאמה קצר ================= */}
+        {/* ================= 8. שאלון התאמה קצר ================= */}
         <section className={`border rounded-2xl p-5 space-y-4 ${bgCard}`}>
           <div className="flex items-center justify-between">
             <h3 className="text-base sm:text-lg font-black">
@@ -990,7 +988,7 @@ export default function Home() {
           )}
         </section>
 
-        {/* ================= 8. טופס יצירת קשר ================= */}
+        {/* ================= 9. טופס יצירת קשר ================= */}
         <section id="contact" className={`border rounded-2xl p-6 space-y-4 scroll-mt-20 ${bgCard}`}>
           <div className="text-center space-y-1">
             <h3 className="text-xl font-black">
@@ -1091,7 +1089,7 @@ export default function Home() {
         </svg>
       </a>
 
-      {/* ================= תפריט ניווט תחתון (4 כפתורים כולל פרויקטים) ================= */}
+      {/* ================= תפריט ניווט תחתון ================= */}
       <nav
         className={`fixed bottom-0 inset-x-0 z-40 border-t backdrop-blur-lg ${
           isDark ? "bg-[#0b0c10]/95 border-white/10" : "bg-white/95 border-slate-200"
