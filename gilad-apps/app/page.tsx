@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import SiteTools, { AccentColor, Language } from "./SiteTools";
 
 interface FeaturedProject {
@@ -11,12 +11,12 @@ interface FeaturedProject {
   categoryEn: string;
   descHe: string;
   descEn: string;
-  imageSrc: string;
+  images: string[];
   tags: string[];
 }
 
-// ================= הגדרת הפרויקטים הנבחרים שלך =================
-// כדי להוסיף תמונה: שים קובץ תמונה בתיקיית public/ (למשל project-1.png) ועדכן כאן את השם
+// ================= הגדרת הפרויקטים הנבחרים שלך (P = Page) =================
+// שים את התמונות בתיקיית public/ לפי השמות שכאן (למשל project-1-P1.png, project-1-P2.png)
 const FEATURED_PROJECTS: FeaturedProject[] = [
   {
     id: "proj-1",
@@ -26,7 +26,11 @@ const FEATURED_PROJECTS: FeaturedProject[] = [
     categoryEn: "Booking System",
     descHe: "ממשק לקוח לבחירת שירות ושעה פנויה, לצד פאנל ניהול לבעל העסק.",
     descEn: "Client booking interface alongside a dedicated business management panel.",
-    imageSrc: "/gilad.app/project-1.png",
+    images: [
+      "/gilad.app/project-1-P1.png",
+      "/gilad.app/project-1-P2.png",
+      "/gilad.app/project-1-P3.png",
+    ],
     tags: ["Mobile First", "RTL", "Admin Panel"],
   },
   {
@@ -37,7 +41,11 @@ const FEATURED_PROJECTS: FeaturedProject[] = [
     categoryEn: "Online Ordering",
     descHe: "תפריט אינטראקטיבי מותאם לנייד עם התאמות אישיות לכל פריט והעברת הזמנות.",
     descEn: "Interactive mobile menu with custom item options and streamlined order flow.",
-    imageSrc: "/gilad.app/project-2.png",
+    images: [
+      "/gilad.app/project-2-P1.png",
+      "/gilad.app/project-2-P2.png",
+      "/gilad.app/project-2-P3.png",
+    ],
     tags: ["Web App", "UI/UX", "Custom Flow"],
   },
   {
@@ -48,7 +56,11 @@ const FEATURED_PROJECTS: FeaturedProject[] = [
     categoryEn: "Dashboard",
     descHe: "מסך ניהול מרכזי לצפייה בנתונים, עריכת זמינות וניהול לקוחות במקום אחד.",
     descEn: "Centralized control screen for viewing data, editing availability, and managing clients.",
-    imageSrc: "/gilad.app/project-3.png",
+    images: [
+      "/gilad.app/project-3-P1.png",
+      "/gilad.app/project-3-P2.png",
+      "/gilad.app/project-3-P3.png",
+    ],
     tags: ["Dashboard", "Management", "Custom System"],
   },
 ];
@@ -74,9 +86,11 @@ export default function Home() {
     "/gilad.app/business-card.png",
   ];
 
-  // Featured Projects Image Error Tracking & Lightbox Modal
-  const [failedProjectImgs, setFailedProjectImgs] = useState<Record<string, boolean>>({});
+  // Featured Projects Carousel & Lightbox State
+  const [failedUrls, setFailedUrls] = useState<Record<string, boolean>>({});
+  const [activeSlideIndex, setActiveSlideIndex] = useState<Record<string, number>>({});
   const [selectedProject, setSelectedProject] = useState<FeaturedProject | null>(null);
+  const [modalSlideIndex, setModalSlideIndex] = useState<number>(0);
 
   // Local Demo Sandbox
   const [sandboxTab, setSandboxTab] = useState<"barber" | "coffee">("barber");
@@ -114,6 +128,60 @@ export default function Home() {
       clearTimeout(hideTimer);
     };
   }, []);
+
+  // Helper to get only valid (non-failed) images for a project
+  const getValidImages = useCallback(
+    (proj: FeaturedProject) => proj.images.filter((url) => !failedUrls[url]),
+    [failedUrls]
+  );
+
+  // Auto-advance project carousel every 6 seconds when modal is NOT open
+  useEffect(() => {
+    if (selectedProject) return;
+
+    const interval = setInterval(() => {
+      setActiveSlideIndex((prev) => {
+        const nextState = { ...prev };
+        FEATURED_PROJECTS.forEach((proj) => {
+          const validImgs = getValidImages(proj);
+          if (validImgs.length > 1) {
+            const current = prev[proj.id] || 0;
+            nextState[proj.id] = (current + 1) % validImgs.length;
+          }
+        });
+        return nextState;
+      });
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [selectedProject, getValidImages]);
+
+  // Keyboard navigation inside the enlarged Lightbox Modal
+  useEffect(() => {
+    if (!selectedProject) return;
+    const validImgs = getValidImages(selectedProject);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelectedProject(null);
+      } else if (e.key === "ArrowRight" && validImgs.length > 1) {
+        setModalSlideIndex((prev) => (prev + 1) % validImgs.length);
+      } else if (e.key === "ArrowLeft" && validImgs.length > 1) {
+        setModalSlideIndex((prev) => (prev - 1 + validImgs.length) % validImgs.length);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedProject, getValidImages]);
+
+  const handleOpenProjectModal = (proj: FeaturedProject) => {
+    const validImgs = getValidImages(proj);
+    if (validImgs.length === 0) return;
+    const currentIdx = (activeSlideIndex[proj.id] || 0) % validImgs.length;
+    setModalSlideIndex(currentIdx);
+    setSelectedProject(proj);
+  };
 
   const handleLeadSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -511,7 +579,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= 4. פרויקטים נבחרים ================= */}
+        {/* ================= 4. פרויקטים נבחרים (P1, P2, P3 עם מעבר אוטומטי כל 6 שניות ודפדוף בהגדלה) ================= */}
         <section id="projects" className={`border rounded-3xl p-5 space-y-4 scroll-mt-20 ${bgCard}`}>
           <div className="flex items-center justify-between gap-2">
             <div>
@@ -523,49 +591,79 @@ export default function Home() {
               </h3>
             </div>
             <span className={`text-[11px] px-2.5 py-1 rounded-full border ${bgSubCard} ${textMuted}`}>
-              {lang === "he" ? "צילומי מסך" : "Screenshots"}
+              {lang === "he" ? "לחץ להגדלה ודפדוף" : "Click to enlarge"}
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {FEATURED_PROJECTS.map((proj) => {
-              const hasFailed = failedProjectImgs[proj.id];
+            {FEATURED_PROJECTS.map((proj, projIdx) => {
+              const validImgs = getValidImages(proj);
+              const currentIdx = validImgs.length > 0 ? (activeSlideIndex[proj.id] || 0) % validImgs.length : 0;
+              const currentImgUrl = validImgs[currentIdx];
+
               return (
                 <div
                   key={proj.id}
-                  onClick={() => !hasFailed && setSelectedProject(proj)}
+                  onClick={() => handleOpenProjectModal(proj)}
                   className={`rounded-2xl border overflow-hidden flex flex-col transition ${bgSubCard} ${
-                    !hasFailed ? "cursor-pointer hover:scale-[1.01]" : ""
+                    validImgs.length > 0 ? "cursor-pointer hover:scale-[1.01]" : ""
                   }`}
                 >
+                  {/* אזור תצוגת התמונות (מתחלף אוטומטית כל 6 שניות) */}
                   <div className="relative aspect-[16/10] bg-[#0b0c10] overflow-hidden flex items-center justify-center border-b border-white/10">
-                    {!hasFailed ? (
+                    {validImgs.length > 0 && currentImgUrl ? (
                       <>
                         <img
-                          src={proj.imageSrc}
-                          alt={lang === "he" ? proj.titleHe : proj.titleEn}
+                          src={currentImgUrl}
+                          alt={`${lang === "he" ? proj.titleHe : proj.titleEn} - P${currentIdx + 1}`}
                           onError={() =>
-                            setFailedProjectImgs((prev) => ({ ...prev, [proj.id]: true }))
+                            setFailedUrls((prev) => ({ ...prev, [currentImgUrl]: true }))
                           }
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transition-opacity duration-500"
                         />
+
+                        {/* תגית מספר עמוד (P1 / P3) */}
+                        {validImgs.length > 1 && (
+                          <div
+                            className="absolute top-2 right-2 bg-black/75 backdrop-blur-sm text-white text-[10px] font-mono px-2 py-0.5 rounded-md border border-white/15"
+                            dir="ltr"
+                          >
+                            P{currentIdx + 1} / P{validImgs.length}
+                          </div>
+                        )}
+
+                        {/* נקודות חיווי בתחתית התמונה */}
+                        {validImgs.length > 1 && (
+                          <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/60 px-2 py-1 rounded-full">
+                            {validImgs.map((_, dotIdx) => (
+                              <span
+                                key={dotIdx}
+                                className={`h-1.5 rounded-full transition-all ${
+                                  dotIdx === currentIdx ? "w-3.5 bg-amber-400" : "w-1.5 bg-white/40"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        )}
+
                         <div className="absolute bottom-2 left-2 bg-black/75 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-md border border-white/15">
-                          {lang === "he" ? "לחץ להגדלה 🔍" : "Click to enlarge 🔍"}
+                          {lang === "he" ? "להגדלה 🔍" : "Enlarge 🔍"}
                         </div>
                       </>
                     ) : (
                       <div className="p-4 text-center space-y-1.5">
                         <div className="text-2xl">📸</div>
                         <p className="text-xs font-bold text-slate-300">
-                          {lang === "he" ? "מקום לתמונת פרויקט" : "Project Image Slot"}
+                          {lang === "he" ? "מקום לתמונות הפרויקט" : "Project Images Slot"}
                         </p>
                         <p className="text-[10px] font-mono text-slate-400" dir="ltr">
-                          public/{proj.imageSrc.replace("/gilad.app/", "")}
+                          public/project-{projIdx + 1}-P1.png
                         </p>
                       </div>
                     )}
                   </div>
 
+                  {/* פרטי הפרויקט */}
                   <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
                     <div className="space-y-1">
                       <span className={`text-[11px] font-bold ${theme.text}`}>
@@ -596,44 +694,125 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= חלון הגדלת תמונת פרויקט (Lightbox Modal) ================= */}
-        {selectedProject && (
-          <div
-            onClick={() => setSelectedProject(null)}
-            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
-          >
+        {/* ================= חלון הגדלת תמונת פרויקט עם דפדוף ימינה ושמאלה (Lightbox Modal) ================= */}
+        {selectedProject && (() => {
+          const validImgs = getValidImages(selectedProject);
+          const safeModalIdx = validImgs.length > 0 ? modalSlideIndex % validImgs.length : 0;
+          const activeModalUrl = validImgs[safeModalIdx];
+
+          const goNext = (e: React.MouseEvent) => {
+            e.stopPropagation();
+            if (validImgs.length <= 1) return;
+            setModalSlideIndex((prev) => (prev + 1) % validImgs.length);
+          };
+
+          const goPrev = (e: React.MouseEvent) => {
+            e.stopPropagation();
+            if (validImgs.length <= 1) return;
+            setModalSlideIndex((prev) => (prev - 1 + validImgs.length) % validImgs.length);
+          };
+
+          return (
             <div
-              onClick={(e) => e.stopPropagation()}
-              className={`max-w-xl w-full rounded-3xl border overflow-hidden shadow-2xl ${bgCard}`}
+              onClick={() => setSelectedProject(null)}
+              className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
             >
-              <div className="relative bg-black flex items-center justify-center max-h-[70vh] overflow-hidden">
-                <img
-                  src={selectedProject.imageSrc}
-                  alt={lang === "he" ? selectedProject.titleHe : selectedProject.titleEn}
-                  className="w-full h-auto max-h-[70vh] object-contain"
-                />
-                <button
-                  type="button"
-                  onClick={() => setSelectedProject(null)}
-                  className="absolute top-3 left-3 w-9 h-9 rounded-full bg-black/75 text-white border border-white/20 flex items-center justify-center font-bold cursor-pointer hover:bg-black"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="p-4 space-y-1">
-                <span className={`text-xs font-bold ${theme.text}`}>
-                  {lang === "he" ? selectedProject.categoryHe : selectedProject.categoryEn}
-                </span>
-                <h4 className="text-base font-black">
-                  {lang === "he" ? selectedProject.titleHe : selectedProject.titleEn}
-                </h4>
-                <p className={`text-xs ${textMuted}`}>
-                  {lang === "he" ? selectedProject.descHe : selectedProject.descEn}
-                </p>
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className={`max-w-2xl w-full rounded-3xl border overflow-hidden shadow-2xl ${bgCard}`}
+              >
+                <div className="relative bg-black flex items-center justify-center min-h-[260px] max-h-[72vh] overflow-hidden select-none">
+                  {activeModalUrl && (
+                    <img
+                      src={activeModalUrl}
+                      alt={`${lang === "he" ? selectedProject.titleHe : selectedProject.titleEn} - P${safeModalIdx + 1}`}
+                      className="w-full h-auto max-h-[72vh] object-contain"
+                    />
+                  )}
+
+                  {/* כפתור סגירה */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProject(null)}
+                    aria-label="סגור"
+                    className="absolute top-3 left-3 w-10 h-10 rounded-full bg-black/80 text-white border border-white/25 flex items-center justify-center font-bold cursor-pointer hover:bg-black z-10"
+                  >
+                    ✕
+                  </button>
+
+                  {/* מונה עמודים P1 / P3 */}
+                  {validImgs.length > 1 && (
+                    <div
+                      className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/80 text-white text-xs font-mono border border-white/20 z-10"
+                      dir="ltr"
+                    >
+                      Page {safeModalIdx + 1} / {validImgs.length}
+                    </div>
+                  )}
+
+                  {/* כפתורי דפדוף ימינה ושמאלה */}
+                  {validImgs.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={goNext}
+                        aria-label="התמונה הבאה"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/80 hover:bg-black text-white border border-white/25 flex items-center justify-center text-lg font-black cursor-pointer shadow-lg transition transform hover:scale-105 z-10"
+                      >
+                        ❯
+                      </button>
+                      <button
+                        type="button"
+                        onClick={goPrev}
+                        aria-label="התמונה הקודמת"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/80 hover:bg-black text-white border border-white/25 flex items-center justify-center text-lg font-black cursor-pointer shadow-lg transition transform hover:scale-105 z-10"
+                      >
+                        ❮
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* פס תחתון עם תיאור ונקודות בחירה ישירה לעמוד */}
+                <div className="p-4 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`text-xs font-bold ${theme.text}`}>
+                      {lang === "he" ? selectedProject.categoryHe : selectedProject.categoryEn}
+                    </span>
+
+                    {validImgs.length > 1 && (
+                      <div className="flex items-center gap-1.5" dir="ltr">
+                        {validImgs.map((_, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setModalSlideIndex(idx)}
+                            className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-bold transition cursor-pointer ${
+                              idx === safeModalIdx
+                                ? theme.btn
+                                : "bg-white/10 text-slate-300 hover:bg-white/20"
+                            }`}
+                          >
+                            P{idx + 1}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 className="text-base font-black">
+                      {lang === "he" ? selectedProject.titleHe : selectedProject.titleEn}
+                    </h4>
+                    <p className={`text-xs ${textMuted}`}>
+                      {lang === "he" ? selectedProject.descHe : selectedProject.descEn}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ================= 5. הדגמה אינטראקטיבית בטלפון ================= */}
         <section id="sandbox" className={`border rounded-3xl p-5 space-y-4 scroll-mt-20 ${bgCard}`}>
