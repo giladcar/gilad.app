@@ -8,6 +8,56 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+interface FeaturedProject {
+  id: string;
+  titleHe: string;
+  titleEn: string;
+  categoryHe: string;
+  categoryEn: string;
+  descHe: string;
+  descEn: string;
+  imageSrc: string;
+  tags: string[];
+}
+
+// ================= הגדרת הפרויקטים הנבחרים שלך =================
+// כדי להוסיף תמונה: שים קובץ תמונה בתיקיית public/ (למשל project-1.png) ועדכן כאן את השם
+const FEATURED_PROJECTS: FeaturedProject[] = [
+  {
+    id: "proj-1",
+    titleHe: "מערכת קביעת תורים וניהול יומן",
+    titleEn: "Appointment Booking & Calendar System",
+    categoryHe: "מערכת ניהול ותורים",
+    categoryEn: "Booking System",
+    descHe: "ממשק לקוח מהיר לבחירת שירות ושעה פנויה, לצד פאנל ניהול לבעל העסק.",
+    descEn: "Fast client booking interface alongside a dedicated business management panel.",
+    imageSrc: "/gilad.app/project-1.png",
+    tags: ["Mobile First", "RTL", "Admin Panel"],
+  },
+  {
+    id: "proj-2",
+    titleHe: "אפליקציית הזמנות ותפריט דיגיטלי",
+    titleEn: "Digital Menu & Ordering App",
+    categoryHe: "הזמנות אונליין",
+    categoryEn: "Online Ordering",
+    descHe: "תפריט אינטראקטיבי מותאם לנייד עם התאמות אישיות לכל מנה והעברת הזמנות.",
+    descEn: "Interactive mobile menu with custom item options and streamlined order flow.",
+    imageSrc: "/gilad.app/project-2.png",
+    tags: ["Web App", "UI/UX", "Fast Checkout"],
+  },
+  {
+    id: "proj-3",
+    titleHe: "פאנל ניהול ובקרה לעסק",
+    titleEn: "Business Control & Admin Dashboard",
+    categoryHe: "ממשק ניהול",
+    categoryEn: "Dashboard",
+    descHe: "מסך ניהול מרכזי לצפייה בנתונים, עריכת זמינות וניהול לקוחות במקום אחד.",
+    descEn: "Centralized control screen for viewing data, editing availability, and managing clients.",
+    imageSrc: "/gilad.app/project-3.png",
+    tags: ["Dashboard", "Analytics", "Custom System"],
+  },
+];
+
 export default function Home() {
   // Splash Screen
   const [showSplash, setShowSplash] = useState(true);
@@ -34,6 +84,10 @@ export default function Home() {
     "/gilad.app/business-card.png",
   ];
 
+  // Featured Projects Image Error Tracking & Lightbox Modal
+  const [failedProjectImgs, setFailedProjectImgs] = useState<Record<string, boolean>>({});
+  const [selectedProject, setSelectedProject] = useState<FeaturedProject | null>(null);
+
   // Local Demo Sandbox
   const [sandboxTab, setSandboxTab] = useState<"barber" | "coffee">("barber");
   const [barberService, setBarberService] = useState("תספורת גברים");
@@ -44,7 +98,7 @@ export default function Home() {
   const [coffeeMilk, setCoffeeMilk] = useState("חלב שיבולת");
   const [coffeeOrdered, setCoffeeOrdered] = useState(false);
 
-  // 3-Question Business Quiz (No prices, no commitments)
+  // 3-Question Business Quiz
   const [quizStep, setQuizStep] = useState<number>(0);
   const [quizAnswers, setQuizAnswers] = useState<{
     goal: string;
@@ -65,12 +119,10 @@ export default function Home() {
     const fadeTimer = setTimeout(() => setFadeSplash(true), 1700);
     const hideTimer = setTimeout(() => setShowSplash(false), 2200);
 
-    // Register Service Worker for Web App installation
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/gilad.app/sw.js").catch(() => {});
     }
 
-    // Listen for browser Web App install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -177,7 +229,7 @@ export default function Home() {
     purple: {
       btn: "bg-purple-500 hover:bg-purple-400 text-white shadow-purple-500/20",
       text: "text-purple-400",
-      badge: "bg-purple-500/15 text-purple-400 border-purple-400/30",
+      badge: "bg-purple-500/15 text-purple-400 border-purple-500/30",
       border: "border-purple-400/40",
       glow: "shadow-[0_0_40px_rgba(168,85,247,0.18)]",
       heroBg: isDark
@@ -300,7 +352,7 @@ export default function Home() {
 
       {/* ================= MAIN CONTAINER ================= */}
       <main id="top" className="max-w-2xl mx-auto px-4 py-6 space-y-7">
-        {/* ================= 1. HERO SECTION (ללא התחייבויות) ================= */}
+        {/* ================= 1. HERO SECTION ================= */}
         <section className={`rounded-3xl border p-6 space-y-4 relative overflow-hidden ${theme.heroBg} ${theme.glow}`}>
           <h1 className="text-2xl sm:text-3xl font-black leading-tight">
             {lang === "he"
@@ -314,7 +366,6 @@ export default function Home() {
               : "Ordering systems, appointment scheduling, and custom apps tailored to your business needs."}
           </p>
 
-          {/* כפתור התקנת אפליקציית Web אמיתית (PWA) */}
           <div className="pt-1 flex flex-col sm:flex-row gap-2.5">
             <a
               href="https://wa.me/972527431770?text=היי%20גילעד,%20אשמח%20לדבר%20על%20אפליקציה%20לעסק%20שלי"
@@ -337,7 +388,6 @@ export default function Home() {
             )}
           </div>
 
-          {/* הסבר קצר במידה והגולש באייפון/ספארי או שהדפדפן דורש לחיצה בתפריט */}
           {showIosInstallHelp && (
             <div className={`rounded-xl border p-3.5 text-xs space-y-1 ${bgCard}`}>
               <div className="font-bold flex items-center justify-between">
@@ -461,7 +511,133 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= 3. הדגמה אינטראקטיבית בטלפון (ללא הכיתוב שהסרנו) ================= */}
+        {/* ================= 3. פרויקטים נבחרים (גלריית תמונות בטוחה ללא קישורים חיים) ================= */}
+        <section id="projects" className={`border rounded-3xl p-5 space-y-4 scroll-mt-20 ${bgCard}`}>
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <span className={`text-xs font-bold block ${theme.text}`}>
+                {lang === "he" ? "🖼️ הצצה לעבודות" : "🖼️ Work Showcase"}
+              </span>
+              <h3 className="text-lg font-black">
+                {lang === "he" ? "פרויקטים נבחרים" : "Featured Projects"}
+              </h3>
+            </div>
+            <span className={`text-[11px] px-2.5 py-1 rounded-full border ${bgSubCard} ${textMuted}`}>
+              {lang === "he" ? "צילומי מסך" : "Screenshots"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {FEATURED_PROJECTS.map((proj) => {
+              const hasFailed = failedProjectImgs[proj.id];
+              return (
+                <div
+                  key={proj.id}
+                  onClick={() => !hasFailed && setSelectedProject(proj)}
+                  className={`rounded-2xl border overflow-hidden flex flex-col transition ${bgSubCard} ${
+                    !hasFailed ? "cursor-pointer hover:scale-[1.01]" : ""
+                  }`}
+                >
+                  {/* אזור התמונה */}
+                  <div className="relative aspect-[16/10] bg-[#0b0c10] overflow-hidden flex items-center justify-center border-b border-white/10">
+                    {!hasFailed ? (
+                      <>
+                        <img
+                          src={proj.imageSrc}
+                          alt={lang === "he" ? proj.titleHe : proj.titleEn}
+                          onError={() =>
+                            setFailedProjectImgs((prev) => ({ ...prev, [proj.id]: true }))
+                          }
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute bottom-2 left-2 bg-black/75 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-md border border-white/15">
+                          {lang === "he" ? "לחץ להגדלה 🔍" : "Click to enlarge 🔍"}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="p-4 text-center space-y-1.5">
+                        <div className="text-2xl">📸</div>
+                        <p className="text-xs font-bold text-slate-300">
+                          {lang === "he" ? "מקום לתמונת פרויקט" : "Project Image Slot"}
+                        </p>
+                        <p className="text-[10px] font-mono text-slate-400" dir="ltr">
+                          public/{proj.imageSrc.replace("/gilad.app/", "")}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* פרטי הפרויקט */}
+                  <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
+                    <div className="space-y-1">
+                      <span className={`text-[11px] font-bold ${theme.text}`}>
+                        {lang === "he" ? proj.categoryHe : proj.categoryEn}
+                      </span>
+                      <h4 className="font-black text-sm leading-snug">
+                        {lang === "he" ? proj.titleHe : proj.titleEn}
+                      </h4>
+                      <p className={`text-xs leading-relaxed ${textMuted}`}>
+                        {lang === "he" ? proj.descHe : proj.descEn}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1 pt-1" dir="ltr">
+                      {proj.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-black/25 border border-white/10 opacity-80"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ================= חלון הגדלת תמונת פרויקט (Lightbox Modal) ================= */}
+        {selectedProject && (
+          <div
+            onClick={() => setSelectedProject(null)}
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className={`max-w-xl w-full rounded-3xl border overflow-hidden shadow-2xl ${bgCard}`}
+            >
+              <div className="relative bg-black flex items-center justify-center max-h-[70vh] overflow-hidden">
+                <img
+                  src={selectedProject.imageSrc}
+                  alt={lang === "he" ? selectedProject.titleHe : selectedProject.titleEn}
+                  className="w-full h-auto max-h-[70vh] object-contain"
+                />
+                <button
+                  type="button"
+                  onClick={() => setSelectedProject(null)}
+                  className="absolute top-3 left-3 w-9 h-9 rounded-full bg-black/75 text-white border border-white/20 flex items-center justify-center font-bold cursor-pointer hover:bg-black"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-4 space-y-1">
+                <span className={`text-xs font-bold ${theme.text}`}>
+                  {lang === "he" ? selectedProject.categoryHe : selectedProject.categoryEn}
+                </span>
+                <h4 className="text-base font-black">
+                  {lang === "he" ? selectedProject.titleHe : selectedProject.titleEn}
+                </h4>
+                <p className={`text-xs ${textMuted}`}>
+                  {lang === "he" ? selectedProject.descHe : selectedProject.descEn}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================= 4. הדגמה אינטראקטיבית בטלפון ================= */}
         <section id="sandbox" className={`border rounded-3xl p-5 space-y-4 scroll-mt-20 ${bgCard}`}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-lg font-black">
@@ -667,7 +843,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= 4. קובץ הכלים החכמים (SiteTools) ================= */}
+        {/* ================= 5. קובץ הכלים החכמים (SiteTools) ================= */}
         <SiteTools
           accent={accent}
           setAccent={setAccent}
@@ -676,7 +852,7 @@ export default function Home() {
           isDark={isDark}
         />
 
-        {/* ================= 5. השוואה מותאמת למובייל (ללא טקסטים ענקיים שנחתכים) ================= */}
+        {/* ================= 6. יתרונות אפליקציה מותאמת אישית ================= */}
         <section className={`border rounded-2xl p-5 space-y-3 ${bgCard}`}>
           <h3 className="text-base sm:text-lg font-black">
             {lang === "he"
@@ -700,7 +876,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= 6. שאלון התאמה קצר (ללא מחיר וללא התחייבויות) ================= */}
+        {/* ================= 7. שאלון התאמה קצר ================= */}
         <section className={`border rounded-2xl p-5 space-y-4 ${bgCard}`}>
           <div className="flex items-center justify-between">
             <h3 className="text-base sm:text-lg font-black">
@@ -814,7 +990,7 @@ export default function Home() {
           )}
         </section>
 
-        {/* ================= 7. טופס יצירת קשר ================= */}
+        {/* ================= 8. טופס יצירת קשר ================= */}
         <section id="contact" className={`border rounded-2xl p-6 space-y-4 scroll-mt-20 ${bgCard}`}>
           <div className="text-center space-y-1">
             <h3 className="text-xl font-black">
@@ -915,16 +1091,20 @@ export default function Home() {
         </svg>
       </a>
 
-      {/* ================= תפריט ניווט תחתון ================= */}
+      {/* ================= תפריט ניווט תחתון (4 כפתורים כולל פרויקטים) ================= */}
       <nav
         className={`fixed bottom-0 inset-x-0 z-40 border-t backdrop-blur-lg ${
           isDark ? "bg-[#0b0c10]/95 border-white/10" : "bg-white/95 border-slate-200"
         }`}
       >
-        <div className="max-w-2xl mx-auto grid grid-cols-3 py-2 px-2 text-center">
+        <div className="max-w-2xl mx-auto grid grid-cols-4 py-2 px-2 text-center">
           <a href="#top" className={`flex flex-col items-center gap-0.5 py-1 font-bold text-[11px] ${theme.text}`}>
             <span className="text-base">🏠</span>
             <span>{lang === "he" ? "ראשי" : "Home"}</span>
+          </a>
+          <a href="#projects" className={`flex flex-col items-center gap-0.5 py-1 text-[11px] transition ${textMuted}`}>
+            <span className="text-base">🖼️</span>
+            <span>{lang === "he" ? "פרויקטים" : "Projects"}</span>
           </a>
           <a href="#sandbox" className={`flex flex-col items-center gap-0.5 py-1 text-[11px] transition ${textMuted}`}>
             <span className="text-base">📱</span>
