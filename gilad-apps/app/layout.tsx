@@ -16,7 +16,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl">
-      <body className={`${heebo.className} bg-slate-950 text-white antialiased`}>
+      <head>
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" async />
+        <style>{`
+          @keyframes spinSlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          @keyframes pulseGlow {
+            0%, 100% { opacity: 0.8; transform: scale(0.98); }
+            50% { opacity: 1; transform: scale(1.03); }
+          }
+          .animate-spin-slow { animation: spinSlow 3s linear infinite; }
+          .animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+          body { background-color: #0b0c10; color: #ffffff; margin: 0; }
+        `}</style>
+      </head>
+      <body className={`${heebo.className} bg-[#0b0c10] text-white antialiased`}>
         {children}
       </body>
     </html>
