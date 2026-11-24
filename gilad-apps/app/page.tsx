@@ -3,6 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import SiteTools, { AccentColor, Language } from "./SiteTools";
 
+interface ProjectSlide {
+  videoSrc: string;
+  imageSrc: string;
+  label?: string;
+}
+
 interface FeaturedProject {
   id: string;
   titleHe: string;
@@ -11,12 +17,12 @@ interface FeaturedProject {
   categoryEn: string;
   descHe: string;
   descEn: string;
-  images: string[];
+  slides: ProjectSlide[];
   tags: string[];
 }
 
 // ================= הגדרת הפרויקטים הנבחרים שלך (P = Page) =================
-// שים את התמונות בתיקיית public/ לפי השמות שכאן (למשל project-1-P1.png, project-1-P2.png)
+// שים בתיקיית public/ קובץ וידאו (.mp4) או תמונה (.png) לפי השמות שכאן:
 const FEATURED_PROJECTS: FeaturedProject[] = [
   {
     id: "proj-1",
@@ -26,10 +32,10 @@ const FEATURED_PROJECTS: FeaturedProject[] = [
     categoryEn: "Booking System",
     descHe: "ממשק לקוח לבחירת שירות ושעה פנויה, לצד פאנל ניהול לבעל העסק.",
     descEn: "Client booking interface alongside a dedicated business management panel.",
-    images: [
-      "/gilad.app/project-1-P1.png",
-      "/gilad.app/project-1-P2.png",
-      "/gilad.app/project-1-P3.png",
+    slides: [
+      { videoSrc: "/gilad.app/project-1-P1.mp4", imageSrc: "/gilad.app/project-1-P1.png" },
+      { videoSrc: "/gilad.app/project-1-P2.mp4", imageSrc: "/gilad.app/project-1-P2.png" },
+      { videoSrc: "/gilad.app/project-1-P3.mp4", imageSrc: "/gilad.app/project-1-P3.png" },
     ],
     tags: ["Mobile First", "RTL", "Admin Panel"],
   },
@@ -41,10 +47,13 @@ const FEATURED_PROJECTS: FeaturedProject[] = [
     categoryEn: "Online Ordering",
     descHe: "תפריט אינטראקטיבי מותאם לנייד עם התאמות אישיות לכל פריט והעברת הזמנות.",
     descEn: "Interactive mobile menu with custom item options and streamlined order flow.",
-    images: [
-      "/gilad.app/project-2-P1.png",
-      "/gilad.app/project-2-P2.png",
-      "/gilad.app/project-2-P3.png",
+    slides: [
+      { videoSrc: "/gilad.app/project-2-P1.mp4", imageSrc: "/gilad.app/project-2-P1.png" },
+      { videoSrc: "/gilad.app/project-2-P2.mp4", imageSrc: "/gilad.app/project-2-P2.png" },
+      { videoSrc: "/gilad.app/project-2-P3.mp4", imageSrc: "/gilad.app/project-2-P3.png" },
+      { videoSrc: "/gilad.app/project-2-P4.mp4", imageSrc: "/gilad.app/project-2-P4.png" },
+      { videoSrc: "/gilad.app/project-2-P5.mp4", imageSrc: "/gilad.app/project-2-P5.png" },
+      { videoSrc: "/gilad.app/project-2-P6.mp4", imageSrc: "/gilad.app/project-2-P6.png" },
     ],
     tags: ["Web App", "UI/UX", "Custom Flow"],
   },
@@ -56,10 +65,11 @@ const FEATURED_PROJECTS: FeaturedProject[] = [
     categoryEn: "Dashboard",
     descHe: "מסך ניהול מרכזי לצפייה בנתונים, עריכת זמינות וניהול לקוחות במקום אחד.",
     descEn: "Centralized control screen for viewing data, editing availability, and managing clients.",
-    images: [
-      "/gilad.app/project-3-P1.png",
-      "/gilad.app/project-3-P2.png",
-      "/gilad.app/project-3-P3.png",
+    slides: [
+      { videoSrc: "/gilad.app/project-3-P1.mp4", imageSrc: "/gilad.app/project-3-P1.png" },
+      { videoSrc: "/gilad.app/project-3-P2.mp4", imageSrc: "/gilad.app/project-3-P2.png" },
+      { videoSrc: "/gilad.app/project-3-P3.mp4", imageSrc: "/gilad.app/project-3-P3.png" },
+      { videoSrc: "/gilad.app/project-3-video.mp4", imageSrc: "/gilad.app/project-3-P4.mp4", label: "VIDEO" },
     ],
     tags: ["Dashboard", "Management", "Custom System"],
   },
@@ -86,8 +96,8 @@ export default function Home() {
     "/gilad.app/business-card.png",
   ];
 
-  // Featured Projects Carousel & Lightbox State
-  const [failedUrls, setFailedUrls] = useState<Record<string, boolean>>({});
+  // Featured Projects Carousel & Lightbox State (Supports Video & Image per Page)
+  const [failedMedia, setFailedMedia] = useState<Record<string, boolean>>({});
   const [activeSlideIndex, setActiveSlideIndex] = useState<Record<string, number>>({});
   const [selectedProject, setSelectedProject] = useState<FeaturedProject | null>(null);
   const [modalSlideIndex, setModalSlideIndex] = useState<number>(0);
@@ -129,10 +139,37 @@ export default function Home() {
     };
   }, []);
 
-  // Helper to get only valid (non-failed) images for a project
-  const getValidImages = useCallback(
-    (proj: FeaturedProject) => proj.images.filter((url) => !failedUrls[url]),
-    [failedUrls]
+  // Resolve available slides (video takes priority; if both fail, slide is skipped)
+  const getValidSlides = useCallback(
+    (proj: FeaturedProject) => {
+      return proj.slides
+        .map((slide, originalIdx) => {
+          const hasPrimaryVideo = !failedMedia[slide.videoSrc];
+          const hasSecondary = !failedMedia[slide.imageSrc];
+          if (!hasPrimaryVideo && !hasSecondary) return null;
+
+          const chosenSrc = hasPrimaryVideo ? slide.videoSrc : slide.imageSrc;
+          const isVideoFile = chosenSrc.toLowerCase().endsWith(".mp4");
+
+          return {
+            type: isVideoFile ? ("video" as const) : ("image" as const),
+            src: chosenSrc,
+            pageNumber: originalIdx + 1,
+            label: slide.label,
+          };
+        })
+        .filter(
+          (
+            item
+          ): item is {
+            type: "video" | "image";
+            src: string;
+            pageNumber: number;
+            label?: string;
+          } => item !== null
+        );
+    },
+    [failedMedia]
   );
 
   // Auto-advance project carousel every 6 seconds when modal is NOT open
@@ -143,10 +180,10 @@ export default function Home() {
       setActiveSlideIndex((prev) => {
         const nextState = { ...prev };
         FEATURED_PROJECTS.forEach((proj) => {
-          const validImgs = getValidImages(proj);
-          if (validImgs.length > 1) {
+          const validSlides = getValidSlides(proj);
+          if (validSlides.length > 1) {
             const current = prev[proj.id] || 0;
-            nextState[proj.id] = (current + 1) % validImgs.length;
+            nextState[proj.id] = (current + 1) % validSlides.length;
           }
         });
         return nextState;
@@ -154,31 +191,31 @@ export default function Home() {
     }, 6000);
 
     return () => clearInterval(interval);
-  }, [selectedProject, getValidImages]);
+  }, [selectedProject, getValidSlides]);
 
   // Keyboard navigation inside the enlarged Lightbox Modal
   useEffect(() => {
     if (!selectedProject) return;
-    const validImgs = getValidImages(selectedProject);
+    const validSlides = getValidSlides(selectedProject);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setSelectedProject(null);
-      } else if (e.key === "ArrowRight" && validImgs.length > 1) {
-        setModalSlideIndex((prev) => (prev + 1) % validImgs.length);
-      } else if (e.key === "ArrowLeft" && validImgs.length > 1) {
-        setModalSlideIndex((prev) => (prev - 1 + validImgs.length) % validImgs.length);
+      } else if (e.key === "ArrowRight" && validSlides.length > 1) {
+        setModalSlideIndex((prev) => (prev + 1) % validSlides.length);
+      } else if (e.key === "ArrowLeft" && validSlides.length > 1) {
+        setModalSlideIndex((prev) => (prev - 1 + validSlides.length) % validSlides.length);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedProject, getValidImages]);
+  }, [selectedProject, getValidSlides]);
 
   const handleOpenProjectModal = (proj: FeaturedProject) => {
-    const validImgs = getValidImages(proj);
-    if (validImgs.length === 0) return;
-    const currentIdx = (activeSlideIndex[proj.id] || 0) % validImgs.length;
+    const validSlides = getValidSlides(proj);
+    if (validSlides.length === 0) return;
+    const currentIdx = (activeSlideIndex[proj.id] || 0) % validSlides.length;
     setModalSlideIndex(currentIdx);
     setSelectedProject(proj);
   };
@@ -579,12 +616,12 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= 4. פרויקטים נבחרים (P1, P2, P3 עם מעבר אוטומטי כל 6 שניות ודפדוף בהגדלה) ================= */}
+        {/* ================= 4. פרויקטים נבחרים (תמונות + סרטונים, P1..P6, מעבר כל 6 שניות ודפדוף בהגדלה) ================= */}
         <section id="projects" className={`border rounded-3xl p-5 space-y-4 scroll-mt-20 ${bgCard}`}>
           <div className="flex items-center justify-between gap-2">
             <div>
               <span className={`text-xs font-bold block ${theme.text}`}>
-                {lang === "he" ? "🖼️ הצצה לעבודות" : "🖼️ Work Showcase"}
+                {lang === "he" ? "🎬 הצצה לעבודות (וידאו ותמונות)" : "🎬 Work Showcase (Video & Images)"}
               </span>
               <h3 className="text-lg font-black">
                 {lang === "he" ? "פרויקטים נבחרים" : "Featured Projects"}
@@ -597,45 +634,67 @@ export default function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {FEATURED_PROJECTS.map((proj, projIdx) => {
-              const validImgs = getValidImages(proj);
-              const currentIdx = validImgs.length > 0 ? (activeSlideIndex[proj.id] || 0) % validImgs.length : 0;
-              const currentImgUrl = validImgs[currentIdx];
+              const validSlides = getValidSlides(proj);
+              const currentIdx = validSlides.length > 0 ? (activeSlideIndex[proj.id] || 0) % validSlides.length : 0;
+              const currentSlide = validSlides[currentIdx];
 
               return (
                 <div
                   key={proj.id}
                   onClick={() => handleOpenProjectModal(proj)}
                   className={`rounded-2xl border overflow-hidden flex flex-col transition ${bgSubCard} ${
-                    validImgs.length > 0 ? "cursor-pointer hover:scale-[1.01]" : ""
+                    validSlides.length > 0 ? "cursor-pointer hover:scale-[1.01]" : ""
                   }`}
                 >
-                  {/* אזור תצוגת התמונות (מתחלף אוטומטית כל 6 שניות) */}
+                  {/* אזור תצוגת הסרטון / התמונה (מתחלף אוטומטית כל 6 שניות) */}
                   <div className="relative aspect-[16/10] bg-[#0b0c10] overflow-hidden flex items-center justify-center border-b border-white/10">
-                    {validImgs.length > 0 && currentImgUrl ? (
+                    {validSlides.length > 0 && currentSlide ? (
                       <>
-                        <img
-                          src={currentImgUrl}
-                          alt={`${lang === "he" ? proj.titleHe : proj.titleEn} - P${currentIdx + 1}`}
-                          onError={() =>
-                            setFailedUrls((prev) => ({ ...prev, [currentImgUrl]: true }))
-                          }
-                          className="w-full h-full object-cover transition-opacity duration-500"
-                        />
-
-                        {/* תגית מספר עמוד (P1 / P3) */}
-                        {validImgs.length > 1 && (
-                          <div
-                            className="absolute top-2 right-2 bg-black/75 backdrop-blur-sm text-white text-[10px] font-mono px-2 py-0.5 rounded-md border border-white/15"
-                            dir="ltr"
-                          >
-                            P{currentIdx + 1} / P{validImgs.length}
-                          </div>
+                        {currentSlide.type === "video" ? (
+                          <video
+                            key={currentSlide.src}
+                            src={currentSlide.src}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            onError={() =>
+                              setFailedMedia((prev) => ({ ...prev, [currentSlide.src]: true }))
+                            }
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={currentSlide.src}
+                            alt={`${lang === "he" ? proj.titleHe : proj.titleEn} - P${currentSlide.pageNumber}`}
+                            onError={() =>
+                              setFailedMedia((prev) => ({ ...prev, [currentSlide.src]: true }))
+                            }
+                            className="w-full h-full object-cover transition-opacity duration-500"
+                          />
                         )}
 
-                        {/* נקודות חיווי בתחתית התמונה */}
-                        {validImgs.length > 1 && (
+                        {/* תגית מספר עמוד + חיווי וידאו */}
+                        <div
+                          className="absolute top-2 right-2 flex items-center gap-1.5"
+                          dir="ltr"
+                        >
+                          {validSlides.length > 1 && (
+                            <span className="bg-black/75 backdrop-blur-sm text-white text-[10px] font-mono px-2 py-0.5 rounded-md border border-white/15">
+                              P{currentIdx + 1} / P{validSlides.length}
+                            </span>
+                          )}
+                          {currentSlide.type === "video" && (
+                            <span className="bg-emerald-500/90 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded-md">
+                              🎬 VIDEO
+                            </span>
+                          )}
+                        </div>
+
+                        {/* נקודות חיווי בתחתית */}
+                        {validSlides.length > 1 && (
                           <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/60 px-2 py-1 rounded-full">
-                            {validImgs.map((_, dotIdx) => (
+                            {validSlides.map((_, dotIdx) => (
                               <span
                                 key={dotIdx}
                                 className={`h-1.5 rounded-full transition-all ${
@@ -652,12 +711,18 @@ export default function Home() {
                       </>
                     ) : (
                       <div className="p-4 text-center space-y-1.5">
-                        <div className="text-2xl">📸</div>
+                        <div className="text-2xl">🎬 / 📸</div>
                         <p className="text-xs font-bold text-slate-300">
-                          {lang === "he" ? "מקום לתמונות הפרויקט" : "Project Images Slot"}
+                          {lang === "he" ? "מקום לסרטון או תמונה" : "Video or Image Slot"}
                         </p>
-                        <p className="text-[10px] font-mono text-slate-400" dir="ltr">
+                        <p className="text-[10px] font-mono text-slate-400 leading-relaxed" dir="ltr">
                           public/project-{projIdx + 1}-P1.png
+                          {proj.id === "proj-3" && (
+                            <>
+                              <br />
+                              public/project-3-video.mp4
+                            </>
+                          )}
                         </p>
                       </div>
                     )}
@@ -694,22 +759,22 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= חלון הגדלת תמונת פרויקט עם דפדוף ימינה ושמאלה (Lightbox Modal) ================= */}
+        {/* ================= חלון הגדלת סרטון/תמונה עם דפדוף ימינה ושמאלה (Lightbox Modal) ================= */}
         {selectedProject && (() => {
-          const validImgs = getValidImages(selectedProject);
-          const safeModalIdx = validImgs.length > 0 ? modalSlideIndex % validImgs.length : 0;
-          const activeModalUrl = validImgs[safeModalIdx];
+          const validSlides = getValidSlides(selectedProject);
+          const safeModalIdx = validSlides.length > 0 ? modalSlideIndex % validSlides.length : 0;
+          const activeModalSlide = validSlides[safeModalIdx];
 
           const goNext = (e: React.MouseEvent) => {
             e.stopPropagation();
-            if (validImgs.length <= 1) return;
-            setModalSlideIndex((prev) => (prev + 1) % validImgs.length);
+            if (validSlides.length <= 1) return;
+            setModalSlideIndex((prev) => (prev + 1) % validSlides.length);
           };
 
           const goPrev = (e: React.MouseEvent) => {
             e.stopPropagation();
-            if (validImgs.length <= 1) return;
-            setModalSlideIndex((prev) => (prev - 1 + validImgs.length) % validImgs.length);
+            if (validSlides.length <= 1) return;
+            setModalSlideIndex((prev) => (prev - 1 + validSlides.length) % validSlides.length);
           };
 
           return (
@@ -722,12 +787,23 @@ export default function Home() {
                 className={`max-w-2xl w-full rounded-3xl border overflow-hidden shadow-2xl ${bgCard}`}
               >
                 <div className="relative bg-black flex items-center justify-center min-h-[260px] max-h-[72vh] overflow-hidden select-none">
-                  {activeModalUrl && (
-                    <img
-                      src={activeModalUrl}
-                      alt={`${lang === "he" ? selectedProject.titleHe : selectedProject.titleEn} - P${safeModalIdx + 1}`}
+                  {activeModalSlide && activeModalSlide.type === "video" ? (
+                    <video
+                      key={activeModalSlide.src}
+                      src={activeModalSlide.src}
+                      controls
+                      autoPlay
+                      playsInline
                       className="w-full h-auto max-h-[72vh] object-contain"
                     />
+                  ) : (
+                    activeModalSlide && (
+                      <img
+                        src={activeModalSlide.src}
+                        alt={`${lang === "he" ? selectedProject.titleHe : selectedProject.titleEn} - P${safeModalIdx + 1}`}
+                        className="w-full h-auto max-h-[72vh] object-contain"
+                      />
+                    )
                   )}
 
                   {/* כפתור סגירה */}
@@ -740,23 +816,25 @@ export default function Home() {
                     ✕
                   </button>
 
-                  {/* מונה עמודים P1 / P3 */}
-                  {validImgs.length > 1 && (
+                  {/* מונה עמודים */}
+                  {validSlides.length > 1 && (
                     <div
                       className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/80 text-white text-xs font-mono border border-white/20 z-10"
                       dir="ltr"
                     >
-                      Page {safeModalIdx + 1} / {validImgs.length}
+                      {activeModalSlide?.label === "VIDEO"
+                        ? "🎬 VIDEO"
+                        : `Page ${safeModalIdx + 1} / ${validSlides.length}`}
                     </div>
                   )}
 
                   {/* כפתורי דפדוף ימינה ושמאלה */}
-                  {validImgs.length > 1 && (
+                  {validSlides.length > 1 && (
                     <>
                       <button
                         type="button"
                         onClick={goNext}
-                        aria-label="התמונה הבאה"
+                        aria-label="הבא"
                         className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/80 hover:bg-black text-white border border-white/25 flex items-center justify-center text-lg font-black cursor-pointer shadow-lg transition transform hover:scale-105 z-10"
                       >
                         ❯
@@ -764,7 +842,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={goPrev}
-                        aria-label="התמונה הקודמת"
+                        aria-label="הקודם"
                         className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/80 hover:bg-black text-white border border-white/25 flex items-center justify-center text-lg font-black cursor-pointer shadow-lg transition transform hover:scale-105 z-10"
                       >
                         ❮
@@ -773,16 +851,16 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* פס תחתון עם תיאור ונקודות בחירה ישירה לעמוד */}
+                {/* פס תחתון עם תיאור וכפתורי בחירה ישירה לעמוד */}
                 <div className="p-4 space-y-2.5">
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className={`text-xs font-bold ${theme.text}`}>
                       {lang === "he" ? selectedProject.categoryHe : selectedProject.categoryEn}
                     </span>
 
-                    {validImgs.length > 1 && (
-                      <div className="flex items-center gap-1.5" dir="ltr">
-                        {validImgs.map((_, idx) => (
+                    {validSlides.length > 1 && (
+                      <div className="flex flex-wrap items-center gap-1.5" dir="ltr">
+                        {validSlides.map((slideItem, idx) => (
                           <button
                             key={idx}
                             type="button"
@@ -793,7 +871,9 @@ export default function Home() {
                                 : "bg-white/10 text-slate-300 hover:bg-white/20"
                             }`}
                           >
-                            P{idx + 1}
+                            {slideItem.label === "VIDEO"
+                              ? "🎬 VIDEO"
+                              : `${slideItem.type === "video" ? "🎬" : ""}P${idx + 1}`}
                           </button>
                         ))}
                       </div>
