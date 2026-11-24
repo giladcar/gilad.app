@@ -3,74 +3,59 @@
 import { useState, useEffect, useCallback } from "react";
 import SiteTools, { AccentColor, Language } from "./SiteTools";
 
-interface ProjectSlide {
-  videoSrc: string;
-  imageSrc: string;
-  label?: string;
+interface ResolvedSlide {
+  type: "video" | "image";
+  src: string;
+  label: string;
 }
 
 interface FeaturedProject {
   id: string;
+  filePrefix: string;
   titleHe: string;
   titleEn: string;
   categoryHe: string;
   categoryEn: string;
   descHe: string;
   descEn: string;
-  slides: ProjectSlide[];
   tags: string[];
 }
 
-// ================= הגדרת הפרויקטים הנבחרים שלך (P = Page) =================
-// שים בתיקיית public/ קובץ וידאו (.mp4) או תמונה (.png) לפי השמות שכאן:
+// ================= הגדרת הפרויקטים הנבחרים שלך =================
+// המערכת מזהה אוטומטית כל קובץ שתשים בתיקיית public/ בפורמט:
+// project-1-P1.png / .mp4  עד  project-1-P12.png / .mp4 (וגם project-3-video.mp4)
 const FEATURED_PROJECTS: FeaturedProject[] = [
   {
     id: "proj-1",
+    filePrefix: "project-1",
     titleHe: "מערכת קביעת תורים וניהול יומן",
     titleEn: "Appointment Booking & Calendar System",
     categoryHe: "מערכת ניהול ותורים",
     categoryEn: "Booking System",
     descHe: "ממשק לקוח לבחירת שירות ושעה פנויה, לצד פאנל ניהול לבעל העסק.",
     descEn: "Client booking interface alongside a dedicated business management panel.",
-    slides: [
-      { videoSrc: "/gilad.app/project-1-P1.mp4", imageSrc: "/gilad.app/project-1-P1.png" },
-      { videoSrc: "/gilad.app/project-1-P2.mp4", imageSrc: "/gilad.app/project-1-P2.png" },
-      { videoSrc: "/gilad.app/project-1-P3.mp4", imageSrc: "/gilad.app/project-1-P3.png" },
-    ],
     tags: ["Mobile First", "RTL", "Admin Panel"],
   },
   {
     id: "proj-2",
+    filePrefix: "project-2",
     titleHe: "אפליקציית הזמנות ותפריט דיגיטלי",
     titleEn: "Digital Menu & Ordering App",
     categoryHe: "הזמנות אונליין",
     categoryEn: "Online Ordering",
     descHe: "תפריט אינטראקטיבי מותאם לנייד עם התאמות אישיות לכל פריט והעברת הזמנות.",
     descEn: "Interactive mobile menu with custom item options and streamlined order flow.",
-    slides: [
-      { videoSrc: "/gilad.app/project-2-P1.mp4", imageSrc: "/gilad.app/project-2-P1.png" },
-      { videoSrc: "/gilad.app/project-2-P2.mp4", imageSrc: "/gilad.app/project-2-P2.png" },
-      { videoSrc: "/gilad.app/project-2-P3.mp4", imageSrc: "/gilad.app/project-2-P3.png" },
-      { videoSrc: "/gilad.app/project-2-P4.mp4", imageSrc: "/gilad.app/project-2-P4.png" },
-      { videoSrc: "/gilad.app/project-2-P5.mp4", imageSrc: "/gilad.app/project-2-P5.png" },
-      { videoSrc: "/gilad.app/project-2-P6.mp4", imageSrc: "/gilad.app/project-2-P6.png" },
-    ],
     tags: ["Web App", "UI/UX", "Custom Flow"],
   },
   {
     id: "proj-3",
+    filePrefix: "project-3",
     titleHe: "פאנל ניהול ובקרה לעסק",
     titleEn: "Business Control & Admin Dashboard",
     categoryHe: "ממשק ניהול",
     categoryEn: "Dashboard",
     descHe: "מסך ניהול מרכזי לצפייה בנתונים, עריכת זמינות וניהול לקוחות במקום אחד.",
     descEn: "Centralized control screen for viewing data, editing availability, and managing clients.",
-    slides: [
-      { videoSrc: "/gilad.app/project-3-P1.mp4", imageSrc: "/gilad.app/project-3-P1.png" },
-      { videoSrc: "/gilad.app/project-3-P2.mp4", imageSrc: "/gilad.app/project-3-P2.png" },
-      { videoSrc: "/gilad.app/project-3-P3.mp4", imageSrc: "/gilad.app/project-3-P3.png" },
-      { videoSrc: "/gilad.app/project-3-video.mp4", imageSrc: "/gilad.app/project-3-P4.mp4", label: "VIDEO" },
-    ],
     tags: ["Dashboard", "Management", "Custom System"],
   },
 ];
@@ -96,8 +81,9 @@ export default function Home() {
     "/gilad.app/business-card.png",
   ];
 
-  // Featured Projects Carousel & Lightbox State (Supports Video & Image per Page)
-  const [failedMedia, setFailedMedia] = useState<Record<string, boolean>>({});
+  // Auto-Discovered Project Media (Images & Videos P1..P12)
+  const [discoveredMedia, setDiscoveredMedia] = useState<Record<string, ResolvedSlide[]>>({});
+  const [isScanningMedia, setIsScanningMedia] = useState<boolean>(true);
   const [activeSlideIndex, setActiveSlideIndex] = useState<Record<string, number>>({});
   const [selectedProject, setSelectedProject] = useState<FeaturedProject | null>(null);
   const [modalSlideIndex, setModalSlideIndex] = useState<number>(0);
@@ -139,37 +125,101 @@ export default function Home() {
     };
   }, []);
 
-  // Resolve available slides (video takes priority; if both fail, slide is skipped)
-  const getValidSlides = useCallback(
-    (proj: FeaturedProject) => {
-      return proj.slides
-        .map((slide, originalIdx) => {
-          const hasPrimaryVideo = !failedMedia[slide.videoSrc];
-          const hasSecondary = !failedMedia[slide.imageSrc];
-          if (!hasPrimaryVideo && !hasSecondary) return null;
+  // Automatic detection of all existing P1..P12 images & videos in public/
+  useEffect(() => {
+    let isCancelled = false;
 
-          const chosenSrc = hasPrimaryVideo ? slide.videoSrc : slide.imageSrc;
-          const isVideoFile = chosenSrc.toLowerCase().endsWith(".mp4");
+    const checkFileExists = async (url: string): Promise<boolean> => {
+      try {
+        const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+        return res.ok;
+      } catch {
+        return false;
+      }
+    };
 
-          return {
-            type: isVideoFile ? ("video" as const) : ("image" as const),
-            src: chosenSrc,
-            pageNumber: originalIdx + 1,
-            label: slide.label,
-          };
+    const scanAllProjects = async () => {
+      const results: Record<string, ResolvedSlide[]> = {};
+
+      await Promise.all(
+        FEATURED_PROJECTS.map(async (proj) => {
+          const foundSlides: ResolvedSlide[] = [];
+
+          // Scan P1 through P12 in parallel
+          const pageNumbers = Array.from({ length: 12 }, (_, idx) => idx + 1);
+          const pageChecks = await Promise.all(
+            pageNumbers.map(async (pageNum) => {
+              const base = `/gilad.app/${proj.filePrefix}-P${pageNum}`;
+              const candidates: { url: string; type: "video" | "image" }[] = [
+                { url: `${base}.mp4`, type: "video" },
+                { url: `${base}.MP4`, type: "video" },
+                { url: `${base}.webm`, type: "video" },
+                { url: `${base}.mov`, type: "video" },
+                { url: `${base}.png`, type: "image" },
+                { url: `${base}.PNG`, type: "image" },
+                { url: `${base}.jpg`, type: "image" },
+                { url: `${base}.JPG`, type: "image" },
+                { url: `${base}.jpeg`, type: "image" },
+                { url: `${base}.webp`, type: "image" },
+              ];
+
+              for (const item of candidates) {
+                if (await checkFileExists(item.url)) {
+                  return {
+                    type: item.type,
+                    src: item.url,
+                    label: `P${pageNum}`,
+                  };
+                }
+              }
+              return null;
+            })
+          );
+
+          pageChecks.forEach((slide) => {
+            if (slide) foundSlides.push(slide);
+          });
+
+          // Also check dedicated video file (e.g., project-3-video.mp4)
+          const videoBase = `/gilad.app/${proj.filePrefix}-video`;
+          const dedicatedVideos = [
+            `${videoBase}.mp4`,
+            `${videoBase}.MP4`,
+            `${videoBase}.webm`,
+            `${videoBase}.mov`,
+          ];
+          for (const vUrl of dedicatedVideos) {
+            if (await checkFileExists(vUrl)) {
+              foundSlides.push({
+                type: "video",
+                src: vUrl,
+                label: "VIDEO",
+              });
+              break;
+            }
+          }
+
+          results[proj.id] = foundSlides;
         })
-        .filter(
-          (
-            item
-          ): item is {
-            type: "video" | "image";
-            src: string;
-            pageNumber: number;
-            label?: string;
-          } => item !== null
-        );
+      );
+
+      if (!isCancelled) {
+        setDiscoveredMedia(results);
+        setIsScanningMedia(false);
+      }
+    };
+
+    scanAllProjects();
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  const getValidSlides = useCallback(
+    (proj: FeaturedProject): ResolvedSlide[] => {
+      return discoveredMedia[proj.id] || [];
     },
-    [failedMedia]
+    [discoveredMedia]
   );
 
   // Auto-advance project carousel every 6 seconds when modal is NOT open
@@ -180,10 +230,10 @@ export default function Home() {
       setActiveSlideIndex((prev) => {
         const nextState = { ...prev };
         FEATURED_PROJECTS.forEach((proj) => {
-          const validSlides = getValidSlides(proj);
-          if (validSlides.length > 1) {
+          const slides = getValidSlides(proj);
+          if (slides.length > 1) {
             const current = prev[proj.id] || 0;
-            nextState[proj.id] = (current + 1) % validSlides.length;
+            nextState[proj.id] = (current + 1) % slides.length;
           }
         });
         return nextState;
@@ -196,15 +246,15 @@ export default function Home() {
   // Keyboard navigation inside the enlarged Lightbox Modal
   useEffect(() => {
     if (!selectedProject) return;
-    const validSlides = getValidSlides(selectedProject);
+    const slides = getValidSlides(selectedProject);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setSelectedProject(null);
-      } else if (e.key === "ArrowRight" && validSlides.length > 1) {
-        setModalSlideIndex((prev) => (prev + 1) % validSlides.length);
-      } else if (e.key === "ArrowLeft" && validSlides.length > 1) {
-        setModalSlideIndex((prev) => (prev - 1 + validSlides.length) % validSlides.length);
+      } else if (e.key === "ArrowRight" && slides.length > 1) {
+        setModalSlideIndex((prev) => (prev + 1) % slides.length);
+      } else if (e.key === "ArrowLeft" && slides.length > 1) {
+        setModalSlideIndex((prev) => (prev - 1 + slides.length) % slides.length);
       }
     };
 
@@ -213,9 +263,9 @@ export default function Home() {
   }, [selectedProject, getValidSlides]);
 
   const handleOpenProjectModal = (proj: FeaturedProject) => {
-    const validSlides = getValidSlides(proj);
-    if (validSlides.length === 0) return;
-    const currentIdx = (activeSlideIndex[proj.id] || 0) % validSlides.length;
+    const slides = getValidSlides(proj);
+    if (slides.length === 0) return;
+    const currentIdx = (activeSlideIndex[proj.id] || 0) % slides.length;
     setModalSlideIndex(currentIdx);
     setSelectedProject(proj);
   };
@@ -616,7 +666,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= 4. פרויקטים נבחרים (תמונות + סרטונים, P1..P6, מעבר כל 6 שניות ודפדוף בהגדלה) ================= */}
+        {/* ================= 4. פרויקטים נבחרים (זיהוי אוטומטי של P1..P12 + סרטונים) ================= */}
         <section id="projects" className={`border rounded-3xl p-5 space-y-4 scroll-mt-20 ${bgCard}`}>
           <div className="flex items-center justify-between gap-2">
             <div>
@@ -633,7 +683,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {FEATURED_PROJECTS.map((proj, projIdx) => {
+            {FEATURED_PROJECTS.map((proj) => {
               const validSlides = getValidSlides(proj);
               const currentIdx = validSlides.length > 0 ? (activeSlideIndex[proj.id] || 0) % validSlides.length : 0;
               const currentSlide = validSlides[currentIdx];
@@ -658,18 +708,13 @@ export default function Home() {
                             loop
                             muted
                             playsInline
-                            onError={() =>
-                              setFailedMedia((prev) => ({ ...prev, [currentSlide.src]: true }))
-                            }
+                            preload="metadata"
                             className="w-full h-full object-cover"
                           />
                         ) : (
                           <img
                             src={currentSlide.src}
-                            alt={`${lang === "he" ? proj.titleHe : proj.titleEn} - P${currentSlide.pageNumber}`}
-                            onError={() =>
-                              setFailedMedia((prev) => ({ ...prev, [currentSlide.src]: true }))
-                            }
+                            alt={`${lang === "he" ? proj.titleHe : proj.titleEn} - ${currentSlide.label}`}
                             className="w-full h-full object-cover transition-opacity duration-500"
                           />
                         )}
@@ -681,7 +726,7 @@ export default function Home() {
                         >
                           {validSlides.length > 1 && (
                             <span className="bg-black/75 backdrop-blur-sm text-white text-[10px] font-mono px-2 py-0.5 rounded-md border border-white/15">
-                              P{currentIdx + 1} / P{validSlides.length}
+                              {currentIdx + 1} / {validSlides.length} ({currentSlide.label})
                             </span>
                           )}
                           {currentSlide.type === "video" && (
@@ -709,6 +754,13 @@ export default function Home() {
                           {lang === "he" ? "להגדלה 🔍" : "Enlarge 🔍"}
                         </div>
                       </>
+                    ) : isScanningMedia ? (
+                      <div className="p-4 text-center space-y-1.5">
+                        <div className="text-xl animate-pulse">⏳</div>
+                        <p className="text-xs text-slate-400">
+                          {lang === "he" ? "טוען קבצים..." : "Loading media..."}
+                        </p>
+                      </div>
                     ) : (
                       <div className="p-4 text-center space-y-1.5">
                         <div className="text-2xl">🎬 / 📸</div>
@@ -716,13 +768,9 @@ export default function Home() {
                           {lang === "he" ? "מקום לסרטון או תמונה" : "Video or Image Slot"}
                         </p>
                         <p className="text-[10px] font-mono text-slate-400 leading-relaxed" dir="ltr">
-                          public/project-{projIdx + 1}-P1.png
-                          {proj.id === "proj-3" && (
-                            <>
-                              <br />
-                              public/project-3-video.mp4
-                            </>
-                          )}
+                          public/{proj.filePrefix}-P1.png
+                          <br />
+                          public/{proj.filePrefix}-P1.mp4
                         </p>
                       </div>
                     )}
@@ -800,7 +848,7 @@ export default function Home() {
                     activeModalSlide && (
                       <img
                         src={activeModalSlide.src}
-                        alt={`${lang === "he" ? selectedProject.titleHe : selectedProject.titleEn} - P${safeModalIdx + 1}`}
+                        alt={`${lang === "he" ? selectedProject.titleHe : selectedProject.titleEn} - ${activeModalSlide.label}`}
                         className="w-full h-auto max-h-[72vh] object-contain"
                       />
                     )
@@ -822,9 +870,7 @@ export default function Home() {
                       className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/80 text-white text-xs font-mono border border-white/20 z-10"
                       dir="ltr"
                     >
-                      {activeModalSlide?.label === "VIDEO"
-                        ? "🎬 VIDEO"
-                        : `Page ${safeModalIdx + 1} / ${validSlides.length}`}
+                      {activeModalSlide?.label} ({safeModalIdx + 1} / {validSlides.length})
                     </div>
                   )}
 
@@ -871,9 +917,8 @@ export default function Home() {
                                 : "bg-white/10 text-slate-300 hover:bg-white/20"
                             }`}
                           >
-                            {slideItem.label === "VIDEO"
-                              ? "🎬 VIDEO"
-                              : `${slideItem.type === "video" ? "🎬" : ""}P${idx + 1}`}
+                            {slideItem.type === "video" ? "🎬 " : ""}
+                            {slideItem.label}
                           </button>
                         ))}
                       </div>
